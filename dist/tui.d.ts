@@ -2,10 +2,8 @@
 /**
  * ClawGuard Interactive TUI
  *
- * Full-screen terminal interface for security scanning.
+ * Full-screen terminal interface with config wizard and dashboard.
  */
-/**
- * Main TUI loop
- */
-declare function main(): Promise<void>;
-export { main as runTui };
+export declare function runTui(options?: {
+    configOnly?: boolean;
+}): Promise<void>;

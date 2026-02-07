@@ -9,7 +9,7 @@ import { formatResult } from './report.js';
 import { generateCapabilityReport, analyzeSemanticChains, scanForCredentialAccess, buildIntentGraph, renderGraphAscii, renderGraphMermaid } from './analyzers/index.js';
 import { glob } from 'glob';
 import { join } from 'path';
-import { runSetupWizard, showConfig, clearConfig, loadConfig, getApiKey, testConfig } from './config.js';
+import { showConfig, clearConfig, loadConfig, getApiKey, testConfig } from './config.js';
 import { showHelp } from './help.js';
 import { signSkill, verifySkill, generateKeyPair, auditSkill } from './signing.js';
 import { analyzeDiff, getHistory } from './diff.js';
@@ -143,7 +143,9 @@ function createProgram() {
             process.exit(success ? 0 : 1);
         }
         else {
-            await runSetupWizard();
+            // Launch TUI config wizard
+            const { runTui } = await import('./tui.js');
+            await runTui({ configOnly: true });
         }
     });
     // ========== INIT COMMAND (alias for config) ==========
@@ -151,7 +153,9 @@ function createProgram() {
         .command('init')
         .description('Initialize ClawGuard with setup wizard')
         .action(async () => {
-        await runSetupWizard();
+        // Launch TUI config wizard
+        const { runTui } = await import('./tui.js');
+        await runTui({ configOnly: true });
     });
     program
         .command('version')

@@ -164,7 +164,9 @@ function createProgram(): Command {
         const success = await testConfig();
         process.exit(success ? 0 : 1);
       } else {
-        await runSetupWizard();
+        // Launch TUI config wizard
+        const { runTui } = await import('./tui.js');
+        await runTui({ configOnly: true });
       }
     });
 
@@ -173,7 +175,9 @@ function createProgram(): Command {
     .command('init')
     .description('Initialize ClawGuard with setup wizard')
     .action(async () => {
-      await runSetupWizard();
+      // Launch TUI config wizard
+      const { runTui } = await import('./tui.js');
+      await runTui({ configOnly: true });
     });
 
   program
