@@ -194,7 +194,7 @@ ClawGuard detects when multiple skills combine to form attacks:
 ## Development
 
 ```bash
-git clone https://github.com/openclaw/clawguard
+git clone https://github.com/mikecavallo/clawguard
 cd clawguard
 npm install
 npm run build

@@ -7,7 +7,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/openclaw/clawguard"
+    "url": "https://github.com/mikecavallo/clawguard"
+  },
+  "homepage": "https://github.com/mikecavallo/clawguard#readme",
+  "bugs": {
+    "url": "https://github.com/mikecavallo/clawguard/issues"
   },
   "type": "module",
   "main": "dist/index.js",

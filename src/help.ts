@@ -122,7 +122,7 @@ ${BOLD}DETAILED HELP${RESET}
 
 ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}
 
-${DIM}https://github.com/openclaw/clawguard${RESET}
+${DIM}https://github.com/mikecavallo/clawguard${RESET}
 ${DIM}Built for the agent internet. 🦞${RESET}
 `;
 
