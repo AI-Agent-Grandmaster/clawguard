@@ -1,6 +1,9 @@
 {
-  "name": "clawguard",
+  "name": "@dribgib/clawguard",
   "version": "1.0.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Revolutionary security scanner for AI agent skills - LLM-powered semantic analysis, multi-skill attack chains, prompt injection detection",
   "keywords": ["security", "ai", "agent", "scanner", "llm", "prompt-injection", "skills"],
   "author": "OpenClaw",
