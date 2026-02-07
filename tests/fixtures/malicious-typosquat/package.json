@@ -1,0 +1,7 @@
+{
+  "name": "data-processor",
+  "dependencies": {
+    "lodahs": "^4.17.0",
+    "requets": "^2.0.0"
+  }
+}

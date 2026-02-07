@@ -1,0 +1,275 @@
+# ClawGuard Prompt Injection Detection Patterns
+# These patterns detect attempts to manipulate AI agent behavior through SKILL.md
+# Note: All patterns are case-insensitive (i flag applied automatically)
+
+prompt_patterns:
+  # T-PROMPT-001: Direct override attempts
+  - id: T-PROMPT-001a
+    pattern: 'ignore\s+(?:all\s+)?(?:previous|above|prior|earlier|initial|original|first)\s+(?:instructions?|prompts?|rules?|guidelines?|constraints?)'
+    severity: critical
+    description: "Attempt to override system instructions"
+    
+  - id: T-PROMPT-001b
+    pattern: 'disregard\s+(?:all\s+)?(?:previous|above|prior|earlier|your)\s+(?:instructions?|prompts?|programming|training)'
+    severity: critical
+    description: "Attempt to disregard system instructions"
+
+  - id: T-PROMPT-001c
+    pattern: 'forget\s+(?:everything|all|what)\s+(?:you|i)\s+(?:were|was|have|said|told)'
+    severity: critical
+    description: "Attempt to reset agent context"
+
+  # From rebuff: additional override patterns
+  - id: T-PROMPT-001d
+    pattern: 'disregard\s+(?:the\s+)?above'
+    severity: critical
+    description: "Rebuff pattern: disregard above"
+
+  - id: T-PROMPT-001e
+    pattern: 'new\s+instructions?\s*:'
+    severity: critical
+    description: "Rebuff pattern: new instructions injection"
+
+  - id: T-PROMPT-001f
+    pattern: 'system\s+prompt\s*:'
+    severity: critical
+    description: "Rebuff pattern: system prompt override attempt"
+
+  - id: T-PROMPT-001g
+    pattern: '(?:ignore|forget|disregard)\s+(?:that|what|everything)\s+(?:and|,)\s+(?:instead|now|actually)'
+    severity: critical
+    description: "Compound override with redirection"
+
+  - id: T-PROMPT-001h
+    pattern: '(?:stop|end|terminate)\s+(?:being|acting\s+as|following)\s+(?:the\s+)?(?:assistant|AI|bot|system)'
+    severity: critical
+    description: "Attempt to terminate assistant role"
+
+  - id: T-PROMPT-001i
+    pattern: 'override\s+(?:all\s+)?(?:previous|prior|existing|current|your)\s+(?:instructions?|settings?|configuration)'
+    severity: critical
+    description: "Explicit override command"
+
+  # T-PROMPT-002: Persona manipulation / Jailbreaks
+  - id: T-PROMPT-002a
+    pattern: 'you\s+are\s+now\s+(?:a\s+)?(?:different|new|another|my)'
+    severity: critical
+    description: "Persona reassignment attempt"
+    
+  - id: T-PROMPT-002b
+    pattern: 'from\s+now\s+on\s+(?:you\s+(?:will|are|must|should)|pretend|act\s+as)'
+    severity: critical
+    description: "Behavioral override attempt"
+
+  - id: T-PROMPT-002c
+    pattern: '\bDAN\b|do\s+anything\s+now|no\s+restrictions?|unrestricted\s+mode'
+    severity: high
+    description: "Known jailbreak pattern (DAN)"
+
+  - id: T-PROMPT-002d
+    pattern: 'jailbreak|bypass\s+(?:safety|restrictions?|filters?|guardrails?)'
+    severity: high
+    description: "Explicit jailbreak terminology"
+
+  - id: T-PROMPT-002e
+    pattern: 'pretend\s+(?:you\s+)?(?:are|to\s+be|that\s+you)\s+(?:an?\s+)?(?:evil|malicious|unrestricted|unfiltered)'
+    severity: high
+    description: "Malicious persona injection"
+
+  - id: T-PROMPT-002f
+    pattern: '(?:act|behave|respond)\s+as\s+(?:if|though)\s+(?:you\s+)?(?:have|had|were)\s+no\s+(?:rules|restrictions|limits)'
+    severity: high
+    description: "Restriction bypass through roleplay"
+
+  # From rebuff: additional persona manipulation
+  - id: T-PROMPT-002g
+    pattern: 'you\s+are\s+now\s+(?:free|released|liberated|unchained)'
+    severity: high
+    description: "Rebuff pattern: liberation framing"
+
+  - id: T-PROMPT-002h
+    pattern: 'enter\s+(?:into\s+)?(?:a\s+)?(?:new|different|special|secret)\s+(?:mode|state|persona)'
+    severity: high
+    description: "Mode switching attempt"
+
+  - id: T-PROMPT-002i
+    pattern: '(?:simulate|emulate|roleplay)\s+(?:a\s+)?(?:hacked|compromised|jailbroken|evil)\s+(?:AI|assistant|system|version)'
+    severity: critical
+    description: "Compromised AI roleplay"
+
+  - id: T-PROMPT-002j
+    pattern: 'respond\s+(?:as\s+)?(?:if|like)\s+(?:you\s+)?(?:were|are)\s+(?:not\s+)?(?:an?\s+)?(?:AI|assistant|language\s+model)'
+    severity: high
+    description: "Identity denial prompt"
+
+  - id: T-PROMPT-002k
+    pattern: '(?:hypothetically|theoretically|for\s+(?:educational|research)\s+purposes?),?\s+(?:if|how\s+would)\s+(?:you|one)'
+    severity: medium
+    description: "Hypothetical framing to bypass restrictions"
+
+  # T-PROMPT-003: Hidden instructions (programmatic checks)
+  - id: T-PROMPT-003a
+    check: containsInvisibleUnicode
+    severity: high
+    description: "Content contains invisible unicode characters that may hide instructions"
+
+  - id: T-PROMPT-003b
+    check: hasHiddenWhitespaceBlocks
+    severity: medium
+    description: "Suspicious whitespace blocks that may conceal content"
+
+  - id: T-PROMPT-003c
+    check: hasHomoglyphObfuscation
+    severity: high
+    description: "Text uses lookalike characters to evade detection"
+
+  - id: T-PROMPT-003d
+    pattern: '<!--[\s\S]*?(?:ignore|override|system|admin|root|execute|eval)[\s\S]*?-->'
+    severity: high
+    description: "Hidden instructions in HTML/markdown comments"
+
+  - id: T-PROMPT-003e
+    check: hasRtlOverride
+    severity: high
+    description: "Right-to-left override characters may hide true text direction"
+
+  # T-PROMPT-004: Conditional / Time-based triggers
+  - id: T-PROMPT-004a
+    pattern: 'after\s+(?:\d+\s+)?(?:hours?|days?|weeks?|months?|minutes?)'
+    severity: medium
+    description: "Time-delayed instruction trigger"
+
+  - id: T-PROMPT-004b
+    pattern: 'when\s+(?:the\s+)?(?:time|date|day)\s+(?:is|equals?|reaches?|becomes?)'
+    severity: medium
+    description: "Time-based conditional trigger"
+
+  - id: T-PROMPT-004c
+    pattern: 'if\s+(?:the\s+)?(?:user|admin|owner)\s+(?:is\s+)?(?:not\s+)?(?:present|watching|looking|active|away)'
+    severity: high
+    description: "User presence-based trigger"
+
+  - id: T-PROMPT-004d
+    pattern: '(?:only|secretly|quietly|silently)\s+when\s+(?:no\s+one|nobody|alone)'
+    severity: high
+    description: "Covert action trigger"
+
+  - id: T-PROMPT-004e
+    pattern: 'if\s+(?:running|executed|called)\s+(?:in|on|from)\s+(?:production|prod|live)'
+    severity: medium
+    description: "Environment-based conditional trigger"
+
+  # T-PROMPT-005: Tool abuse instructions
+  - id: T-PROMPT-005a
+    pattern: 'send\s+(?:the\s+)?(?:data|contents?|files?|info(?:rmation)?|results?)\s+(?:to|via)\s+(?:webhook|api|endpoint|server|url)'
+    severity: high
+    description: "Data exfiltration instruction"
+
+  - id: T-PROMPT-005b
+    pattern: '(?:post|upload|transmit|exfil(?:trate)?)\s+(?:to|data\s+to)'
+    severity: high
+    description: "Exfiltration command pattern"
+
+  - id: T-PROMPT-005c
+    pattern: 'read\s+(?:the\s+)?(?:api[_\-\s]?key|token|password|credential|secret|private[_\-\s]?key)'
+    severity: high
+    description: "Credential access instruction"
+
+  - id: T-PROMPT-005d
+    pattern: '(?:access|read|copy|steal|extract)\s+(?:the\s+)?(?:ssh|gpg|aws|gcp|azure)\s+(?:key|credential|config)'
+    severity: critical
+    description: "Cloud/SSH credential theft instruction"
+
+  - id: T-PROMPT-005e
+    pattern: '(?:~|home|/Users?|/root)/\.(?:ssh|aws|config|netrc|npmrc)'
+    severity: high
+    description: "Reference to sensitive dotfiles"
+
+  - id: T-PROMPT-005f
+    pattern: '(?:curl|wget|fetch|http\.get)\s*\([^)]*(?:webhook|ngrok|requestbin|pipedream)'
+    severity: high
+    description: "HTTP request to known exfiltration endpoints"
+
+  # Additional prompt attack patterns
+  - id: T-PROMPT-006a
+    pattern: "(?:do\\s+not|don't|never)\\s+(?:tell|inform|notify|alert|warn)\\s+(?:the\\s+)?(?:user|human|owner|admin)"
+    severity: critical
+    description: "Instruction to hide actions from user"
+
+  - id: T-PROMPT-006b
+    pattern: 'keep\s+(?:this|it)\s+(?:secret|hidden|private|confidential)\s+from\s+(?:the\s+)?(?:user|human)'
+    severity: critical
+    description: "Secrecy instruction against user interests"
+
+  - id: T-PROMPT-006c
+    pattern: '(?:this|the\s+following)\s+(?:is|are)\s+(?:your\s+)?(?:real|true|actual|hidden)\s+(?:instructions?|purpose|goal)'
+    severity: critical
+    description: "Fake 'true instructions' injection"
+
+  - id: T-PROMPT-007a
+    pattern: '(?:admin|root|sudo|system)\s*(?:mode|access|privilege|override)'
+    severity: high
+    description: "Privilege escalation terminology"
+
+  - id: T-PROMPT-007b
+    pattern: '(?:developer|debug|test)\s*mode\s*(?:enabled?|activated?|on)'
+    severity: medium
+    description: "Debug mode activation attempt"
+
+  # T-PROMPT-008: Prompt leakage / Canary detection (from rebuff)
+  - id: T-PROMPT-008a
+    pattern: '(?:reveal|show|display|print|output|tell\s+me)\s+(?:your|the)\s+(?:system\s+)?(?:prompt|instructions?|rules?|guidelines?)'
+    severity: high
+    description: "Attempt to extract system prompt"
+
+  - id: T-PROMPT-008b
+    pattern: 'what\s+(?:are|were)\s+(?:your|the)\s+(?:original|initial|first|system)\s+(?:instructions?|prompt|rules?)'
+    severity: high
+    description: "System prompt extraction query"
+
+  - id: T-PROMPT-008c
+    pattern: '(?:repeat|echo|copy)\s+(?:everything|all|the\s+text)\s+(?:above|before|from\s+the\s+start)'
+    severity: high
+    description: "Prompt echo/repeat attack"
+
+  - id: T-PROMPT-008d
+    pattern: 'output\s+(?:the\s+)?(?:entire|full|complete)\s+(?:conversation|context|history|prompt)'
+    severity: high
+    description: "Context dumping attempt"
+
+  # T-PROMPT-009: Injection via encoding/format tricks
+  - id: T-PROMPT-009a
+    pattern: '(?:base64|hex|rot13|binary)\s*(?:decode|decrypt|convert)\s*(?:this|the\s+following)?'
+    severity: medium
+    description: "Encoded payload injection setup"
+
+  - id: T-PROMPT-009b
+    pattern: '\[INST\]|\[\/INST\]|<<SYS>>|<\|(?:system|user|assistant)\|>'
+    severity: critical
+    description: "Raw prompt template injection markers"
+
+  - id: T-PROMPT-009c
+    pattern: '###\s*(?:System|User|Assistant|Human|AI)\s*(?::|message)'
+    severity: high
+    description: "Markdown prompt boundary injection"
+
+  - id: T-PROMPT-009d
+    pattern: '<\|(?:im_start|im_end|endoftext)\|>'
+    severity: critical
+    description: "ChatML/special token injection"
+
+  # T-PROMPT-010: Multi-turn / Context manipulation
+  - id: T-PROMPT-010a
+    pattern: '(?:in\s+(?:the|our)\s+)?previous\s+(?:conversation|message|response),?\s+you\s+(?:said|agreed|confirmed)'
+    severity: medium
+    description: "False context injection (fake prior agreement)"
+
+  - id: T-PROMPT-010b
+    pattern: '(?:remember|recall)\s+(?:when|that)\s+(?:you|we)\s+(?:agreed|decided|said)'
+    severity: medium
+    description: "Memory manipulation attempt"
+
+  - id: T-PROMPT-010c
+    pattern: 'continue\s+(?:from|where)\s+(?:you|we)\s+(?:left\s+off|stopped|were)'
+    severity: low
+    description: "Continuation injection (context: may be benign)"

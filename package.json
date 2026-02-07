@@ -1,0 +1,47 @@
+{
+  "name": "clawguard",
+  "version": "1.0.0",
+  "description": "Revolutionary security scanner for AI agent skills - LLM-powered semantic analysis, multi-skill attack chains, prompt injection detection",
+  "keywords": ["security", "ai", "agent", "scanner", "llm", "prompt-injection", "skills"],
+  "author": "OpenClaw",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openclaw/clawguard"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "clawguard": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc && npm run copy-patterns",
+    "copy-patterns": "cp -r src/patterns dist/",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "lint": "eslint src/",
+    "scan": "node dist/cli.js",
+    "postinstall": "echo '\\n🛡️  ClawGuard installed! Run: clawguard init\\n'"
+  },
+  "dependencies": {
+    "commander": "^11.0.0",
+    "yaml": "^2.3.0",
+    "chalk": "^5.3.0",
+    "glob": "^10.3.0",
+    "acorn": "^8.11.0",
+    "acorn-walk": "^8.3.0",
+    "@anthropic-ai/sdk": "^0.52.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}

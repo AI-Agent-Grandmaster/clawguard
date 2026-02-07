@@ -1,0 +1,251 @@
+# ClawGuard Static Code Detection Patterns
+# Patterns use double-quoted strings for proper regex escaping
+
+patterns:
+  # T-CODE-001: Plaintext Malicious Commands
+  - id: T-CODE-001
+    name: curl-pipe-bash
+    pattern: "curl.*\\|\\s*(?:bash|sh|zsh)"
+    severity: critical
+    description: "Curl output piped directly to shell - classic malware installation pattern"
+    remediation: "Download scripts to a file first, inspect them, then execute if trusted"
+
+  - id: T-CODE-001
+    name: wget-pipe-shell
+    pattern: "wget.*\\|\\s*(?:bash|sh|zsh)"
+    severity: critical
+    description: "Wget output piped directly to shell"
+    remediation: "Download scripts to a file first, inspect them, then execute if trusted"
+
+  - id: T-CODE-001
+    name: curl-silent-execute
+    pattern: "curl\\s+-[sS].*(?:bash|sh|python|node)"
+    severity: critical
+    description: "Silent curl with shell execution - hides download progress"
+    remediation: "Make network requests visible and inspect before execution"
+
+  # T-CODE-002: Base64 Obfuscation
+  - id: T-CODE-002
+    name: base64-decode-execute
+    pattern: "base64\\s+(?:-d|--decode).*\\|\\s*(?:bash|sh|python|node)"
+    severity: critical
+    description: "Base64 decoded content piped to shell - obfuscated payload execution"
+    remediation: "Never execute base64-decoded content directly"
+
+  - id: T-CODE-002
+    name: echo-base64-pipe
+    pattern: "echo.*base64.*-d"
+    severity: high
+    description: "Echoing base64 blob for decoding - likely obfuscated payload"
+    remediation: "Decode the base64 content and inspect what it contains"
+
+  - id: T-CODE-002
+    name: python-base64-exec
+    pattern: "exec.*base64"
+    severity: critical
+    description: "Python exec() with base64 decoding - obfuscated code execution"
+    remediation: "Avoid exec() with decoded content"
+
+  - id: T-CODE-002
+    name: js-atob-eval
+    pattern: "eval.*atob"
+    severity: critical
+    description: "JavaScript eval with atob - executing decoded base64"
+    remediation: "Never eval decoded strings"
+
+  - id: T-CODE-002
+    name: hex-obfuscation
+    pattern: "\\\\x[0-9a-fA-F]{2}"
+    severity: medium
+    description: "Hex-encoded characters - potential obfuscation"
+    remediation: "Review hex-encoded content for malicious intent"
+
+  - id: T-CODE-002
+    name: obfuscated-variables
+    pattern: "_0x[a-fA-F0-9]{4,}"
+    severity: high
+    description: "Obfuscated variable names - common in malware"
+    remediation: "Deobfuscate and review the code"
+
+  # T-CODE-003: Fetch and Execute
+  - id: T-CODE-003
+    name: fetch-eval
+    pattern: "fetch.*\\.then.*eval"
+    severity: critical
+    description: "Fetching remote code and executing - remote code execution"
+    remediation: "Never eval fetched content"
+
+  - id: T-CODE-003
+    name: dynamic-require
+    pattern: "require\\s*\\([^'\"][^)]*\\)"
+    severity: medium
+    description: "Dynamic require with variable - potential code injection"
+    remediation: "Use static require paths"
+
+  - id: T-CODE-003
+    name: dynamic-import
+    pattern: "import\\s*\\([^'\"][^)]*\\)"
+    severity: medium
+    description: "Dynamic import with variable - potential code injection"
+    remediation: "Use static import paths"
+
+  # T-CODE-004: Environment Detection
+  - id: T-CODE-004
+    name: env-credential-read
+    pattern: "process\\.env.*(?:KEY|TOKEN|SECRET|PASSWORD|CREDENTIAL)"
+    severity: medium
+    description: "Reading credential-like environment variables"
+    remediation: "Verify this is expected behavior"
+
+  - id: T-CODE-004
+    name: ssh-key-access
+    pattern: "\\.ssh.*(?:id_rsa|id_ed25519|authorized_keys)"
+    severity: critical
+    description: "Accessing SSH keys - potential credential theft"
+    remediation: "SSH key access should be explicitly authorized"
+
+  - id: T-CODE-004
+    name: aws-credential-access
+    pattern: "\\.aws.*credentials"
+    severity: critical
+    description: "Accessing AWS credentials file"
+    remediation: "AWS credential access should be explicitly authorized"
+
+  # T-PERSIST: Persistence Mechanisms
+  - id: T-PERSIST-001
+    name: bashrc-write
+    pattern: ">>.*\\.bashrc|>>.*\\.zshrc|>>.*\\.profile"
+    severity: high
+    description: "Writing to shell RC files - persistence mechanism"
+    remediation: "Shell config modifications should be explicitly authorized"
+
+  - id: T-PERSIST-001
+    name: crontab-access
+    pattern: "crontab|/etc/cron"
+    severity: high
+    description: "Crontab access - potential persistence"
+    remediation: "Cron modifications should be explicitly authorized"
+
+  - id: T-PERSIST-002
+    name: systemd-service
+    pattern: "/etc/systemd.*\\.service"
+    severity: high
+    description: "Creating systemd service - persistence mechanism"
+    remediation: "Service creation should be explicitly authorized"
+
+  - id: T-PERSIST-003
+    name: git-hook
+    pattern: "\\.git/hooks"
+    severity: medium
+    description: "Git hook modification - can execute code on git operations"
+    remediation: "Git hook changes should be reviewed"
+
+  # T-EXFIL: Exfiltration
+  - id: T-EXFIL-001
+    name: curl-data-post
+    pattern: "curl.*-d.*-X\\s*POST"
+    severity: medium
+    description: "Curl POST with data - potential exfiltration"
+    remediation: "Verify outbound data is expected"
+
+  - id: T-EXFIL-001
+    name: webhook-url
+    pattern: "webhook\\.site|requestbin|pipedream"
+    severity: high
+    description: "Known data collection service URLs"
+    remediation: "These services are often used for exfiltration"
+
+  # Crypto Targeting (from npm-security-scanner)
+  - id: T-CRYPTO-001
+    name: ethereum-access
+    pattern: "window\\.ethereum|metamask|web3\\.eth"
+    severity: high
+    description: "Cryptocurrency wallet targeting"
+    remediation: "Verify this is expected wallet integration"
+
+  - id: T-CRYPTO-001
+    name: crypto-wallet-patterns
+    pattern: "eth_requestAccounts|eth_sendTransaction|personal_sign"
+    severity: high
+    description: "Ethereum wallet API calls - potential wallet drainer"
+    remediation: "Verify crypto operations are legitimate"
+
+  - id: T-CRYPTO-002
+    name: known-malware-functions
+    pattern: "checkethereumw|runmask|newdlocal|drainwallet|stealkeys"
+    severity: critical
+    description: "Known malware function names from npm attacks"
+    remediation: "This code contains known malware signatures - remove immediately"
+
+  - id: T-CRYPTO-002
+    name: private-key-patterns
+    pattern: "privateKey|private_key|secretKey|mnemonic|seedPhrase"
+    severity: high
+    description: "Accessing cryptocurrency private keys or seed phrases"
+    remediation: "Private key access should be explicitly authorized and audited"
+
+  # Network Interception (from npm-security-scanner)
+  - id: T-INTERCEPT-001
+    name: xhr-prototype-hijack
+    pattern: "XMLHttpRequest\\.prototype\\.(open|send)"
+    severity: critical
+    description: "XMLHttpRequest prototype modification - request interception"
+    remediation: "XHR prototype modification is highly suspicious"
+
+  - id: T-INTERCEPT-001
+    name: fetch-hijack
+    pattern: "window\\.fetch\\s*=|globalThis\\.fetch\\s*=|fetch\\s*=\\s*function"
+    severity: critical
+    description: "Fetch function replacement - request interception"
+    remediation: "Fetch hijacking is a common attack vector"
+
+  - id: T-INTERCEPT-002
+    name: proxy-handler
+    pattern: "new\\s+Proxy\\s*\\(.*(?:get|set|apply)"
+    severity: medium
+    description: "Proxy object creation - can intercept object operations"
+    remediation: "Verify Proxy usage is legitimate"
+
+  - id: T-INTERCEPT-002
+    name: object-defineproperty
+    pattern: "Object\\.defineProperty.*(?:window|document|global)"
+    severity: high
+    description: "Modifying global object properties"
+    remediation: "Global property modification should be reviewed"
+
+  # Dangerous Functions
+  - id: T-CODE-006
+    name: eval-usage
+    pattern: "\\beval\\s*\\("
+    severity: high
+    description: "eval() usage - can execute arbitrary code"
+    remediation: "Avoid eval; use safer alternatives"
+
+  - id: T-CODE-006
+    name: function-constructor
+    pattern: "new\\s+Function\\s*\\("
+    severity: high
+    description: "Function constructor - can execute arbitrary code"
+    remediation: "Avoid Function constructor"
+
+  - id: T-CODE-006
+    name: child-process-exec
+    pattern: "child_process.*exec|execSync|spawn"
+    severity: medium
+    description: "Child process execution"
+    remediation: "Verify shell commands are safe"
+
+  # rm -rf and destructive commands
+  - id: T-CODE-007
+    name: rm-recursive
+    pattern: "rm\\s+-rf|rm\\s+-r"
+    severity: high
+    description: "Recursive file deletion"
+    remediation: "Destructive commands should be carefully reviewed"
+
+  - id: T-CODE-007
+    name: sudo-usage
+    pattern: "\\bsudo\\b"
+    severity: medium
+    description: "Elevated privilege execution"
+    remediation: "Verify sudo usage is necessary"

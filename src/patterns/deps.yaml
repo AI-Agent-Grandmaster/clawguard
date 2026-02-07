@@ -1,0 +1,465 @@
+# ClawGuard Dependency Patterns
+# Known malicious packages and popular packages for typosquat detection
+
+# Known malicious npm packages
+# Sources: npm security advisories, Snyk, various security reports
+malicious_npm:
+  # Event-stream supply chain attack (2018)
+  - name: event-stream
+    versions: ["3.3.6"]
+    reason: "Supply chain attack - contained flatmap-stream malware"
+    
+  - name: flatmap-stream
+    versions: ["*"]
+    reason: "Malware targeting Bitcoin wallets"
+    
+  # ua-parser-js compromise (2021)
+  - name: ua-parser-js
+    versions: ["0.7.29", "0.8.0", "1.0.0"]
+    reason: "Compromised versions contained cryptominer and password stealer"
+    
+  # coa and rc compromise (2021)
+  - name: coa
+    versions: ["2.0.3", "2.0.4", "2.1.1", "2.1.3", "3.0.1", "3.1.3"]
+    reason: "Compromised versions contained malware"
+    
+  - name: rc
+    versions: ["1.2.9", "1.3.9", "2.3.9"]
+    reason: "Compromised versions contained malware"
+    
+  # Typosquat attacks
+  - name: crossenv
+    versions: ["*"]
+    reason: "Typosquat of cross-env, stole environment variables"
+    
+  - name: cross-env.js
+    versions: ["*"]
+    reason: "Typosquat of cross-env"
+    
+  - name: d3.js
+    versions: ["*"]
+    reason: "Typosquat of d3"
+    
+  - name: fabric-js
+    versions: ["*"]
+    reason: "Typosquat of fabric"
+    
+  - name: ffmepg
+    versions: ["*"]
+    reason: "Typosquat of ffmpeg"
+    
+  - name: gruntcli
+    versions: ["*"]
+    reason: "Typosquat of grunt-cli"
+    
+  - name: http-proxy.js
+    versions: ["*"]
+    reason: "Typosquat of http-proxy"
+    
+  - name: jquery.js
+    versions: ["*"]
+    reason: "Typosquat of jquery"
+    
+  - name: mariadb
+    versions: ["*"]
+    reason: "Typosquat of mysql/mariadb packages"
+    
+  - name: mongose
+    versions: ["*"]
+    reason: "Typosquat of mongoose"
+    
+  - name: mssql.js
+    versions: ["*"]
+    reason: "Typosquat of mssql"
+    
+  - name: mssql-node
+    versions: ["*"]
+    reason: "Typosquat of mssql"
+    
+  - name: mysqljs
+    versions: ["*"]
+    reason: "Typosquat of mysql"
+    
+  - name: node-hierarchical
+    versions: ["*"]
+    reason: "Contained malicious code"
+    
+  - name: node-tkinter
+    versions: ["*"]
+    reason: "Typosquat, exfiltrated data"
+    
+  - name: nodefabric
+    versions: ["*"]
+    reason: "Typosquat of node-fabric"
+    
+  - name: opencv.js
+    versions: ["*"]
+    reason: "Typosquat of opencv"
+    
+  - name: openssl.js
+    versions: ["*"]
+    reason: "Typosquat of node openssl bindings"
+    
+  - name: proxy.js
+    versions: ["*"]
+    reason: "Typosquat"
+    
+  - name: shadowsock
+    versions: ["*"]
+    reason: "Typosquat of shadowsocks"
+    
+  - name: smb
+    versions: ["*"]
+    reason: "Contained malware"
+    
+  - name: socket.io
+    versions: ["*"]
+    reason: "Note: check source - there have been typosquats"
+    
+  - name: socks
+    versions: ["*"]
+    reason: "Contained malware"
+    
+  - name: sqliter
+    versions: ["*"]
+    reason: "Typosquat of sqlite3"
+    
+  - name: sqlite.js
+    versions: ["*"]
+    reason: "Typosquat of sqlite3"
+    
+  - name: sqlserver
+    versions: ["*"]
+    reason: "Typosquat"
+    
+  - name: tkinter
+    versions: ["*"]
+    reason: "Typosquat"
+
+  # 2022-2023 malicious packages
+  - name: colors
+    versions: ["1.4.1", "1.4.2"]
+    reason: "Protestware - intentionally corrupted output"
+    
+  - name: faker
+    versions: ["6.6.6"]
+    reason: "Protestware - broke functionality"
+    
+  - name: node-ipc
+    versions: ["10.1.1", "10.1.2", "10.1.3"]
+    reason: "Protestware - destructive payload targeting Russia/Belarus"
+    
+  - name: peacenotwar
+    versions: ["*"]
+    reason: "Dependency of malicious node-ipc versions"
+
+# Known malicious PyPI packages
+malicious_pip:
+  # 2023 attacks
+  - name: ctx
+    versions: ["*"]
+    reason: "Credential stealer targeting AWS keys"
+    
+  - name: phpass
+    versions: ["*"]
+    reason: "Typosquat of passlib, stole credentials"
+    
+  # Typosquats of popular packages
+  - name: python-requests
+    versions: ["*"]
+    reason: "Typosquat of requests"
+    
+  - name: python3-requests
+    versions: ["*"]
+    reason: "Typosquat of requests"
+    
+  - name: request
+    versions: ["*"]
+    reason: "Typosquat of requests"
+    
+  - name: reqeusts
+    versions: ["*"]
+    reason: "Typosquat of requests"
+    
+  - name: requsests
+    versions: ["*"]
+    reason: "Typosquat of requests"
+    
+  - name: python-boto3
+    versions: ["*"]
+    reason: "Typosquat of boto3"
+    
+  - name: botocore2
+    versions: ["*"]
+    reason: "Typosquat of botocore"
+    
+  - name: python-django
+    versions: ["*"]
+    reason: "Typosquat of django"
+    
+  - name: python-flask
+    versions: ["*"]
+    reason: "Typosquat of flask"
+    
+  - name: nmap-python
+    versions: ["*"]
+    reason: "Malicious reverse shell"
+    
+  - name: openvc
+    versions: ["*"]
+    reason: "Typosquat of opencv"
+    
+  - name: python-openvc
+    versions: ["*"]
+    reason: "Typosquat of opencv"
+    
+  - name: opencv-python4
+    versions: ["*"]
+    reason: "Typosquat of opencv-python"
+    
+  - name: coloursama
+    versions: ["*"]
+    reason: "Typosquat of colorama"
+    
+  - name: colorsama
+    versions: ["*"]
+    reason: "Typosquat of colorama"
+    
+  - name: python-colorama
+    versions: ["*"]
+    reason: "Typosquat of colorama"
+    
+  - name: pipsqlite
+    versions: ["*"]
+    reason: "Data exfiltration"
+    
+  - name: ascii2text
+    versions: ["*"]
+    reason: "Data exfiltration"
+    
+  - name: pymafka
+    versions: ["*"]
+    reason: "Typosquat of kafka-python"
+    
+  - name: beautifulsup4
+    versions: ["*"]
+    reason: "Typosquat of beautifulsoup4"
+    
+  - name: bs4
+    versions: ["*"]
+    reason: "Note: legitimate shim exists, but verify"
+    
+  - name: httplib3
+    versions: ["*"]
+    reason: "Typosquat"
+    
+  - name: urllib4
+    versions: ["*"]
+    reason: "Typosquat of urllib3"
+
+# Known malicious Go modules
+malicious_go:
+  - name: github.com/burrowers/garble
+    versions: ["*"]
+    reason: "Verify source - obfuscation tool can be misused"
+
+# Popular npm packages for typosquat detection
+popular_npm:
+  - lodash
+  - express
+  - react
+  - react-dom
+  - axios
+  - moment
+  - request
+  - chalk
+  - commander
+  - debug
+  - async
+  - bluebird
+  - underscore
+  - uuid
+  - mkdirp
+  - glob
+  - minimist
+  - yargs
+  - inquirer
+  - dotenv
+  - body-parser
+  - webpack
+  - babel-core
+  - "@babel/core"
+  - typescript
+  - eslint
+  - jest
+  - mocha
+  - cheerio
+  - puppeteer
+  - socket.io
+  - mongoose
+  - mysql
+  - mysql2
+  - pg
+  - redis
+  - cors
+  - jsonwebtoken
+  - bcrypt
+  - crypto-js
+  - fs-extra
+  - rimraf
+  - cross-env
+  - nodemon
+  - pm2
+  - winston
+  - morgan
+  - helmet
+  - passport
+  - express-validator
+  - sequelize
+  - typeorm
+  - prisma
+  - "@prisma/client"
+  - graphql
+  - apollo-server
+  - next
+  - nuxt
+  - vue
+  - angular
+  - "@angular/core"
+  - svelte
+  - tailwindcss
+  - sass
+  - less
+  - postcss
+  - autoprefixer
+  - esbuild
+  - rollup
+  - parcel
+  - vite
+  - electron
+  - rxjs
+  - ramda
+  - date-fns
+  - dayjs
+  - luxon
+  - immutable
+  - immer
+  - zustand
+  - redux
+  - mobx
+  - recoil
+  - formik
+  - yup
+  - zod
+  - ajv
+  - joi
+  - validator
+  - nanoid
+  - short-uuid
+  - cuid
+
+# Popular pip packages for typosquat detection
+popular_pip:
+  - requests
+  - numpy
+  - pandas
+  - flask
+  - django
+  - boto3
+  - botocore
+  - pillow
+  - matplotlib
+  - scikit-learn
+  - sklearn
+  - tensorflow
+  - torch
+  - pytorch
+  - keras
+  - beautifulsoup4
+  - lxml
+  - selenium
+  - sqlalchemy
+  - celery
+  - redis
+  - pyyaml
+  - cryptography
+  - paramiko
+  - fabric
+  - ansible
+  - pytest
+  - unittest
+  - nose
+  - tox
+  - black
+  - flake8
+  - mypy
+  - pylint
+  - isort
+  - sphinx
+  - mkdocs
+  - httpx
+  - aiohttp
+  - fastapi
+  - uvicorn
+  - gunicorn
+  - starlette
+  - pydantic
+  - marshmallow
+  - attrs
+  - click
+  - typer
+  - argparse
+  - colorama
+  - tqdm
+  - rich
+  - python-dotenv
+  - environs
+  - psycopg2
+  - pymongo
+  - motor
+  - elasticsearch
+  - opensearch-py
+  - kafka-python
+  - pika
+  - kombu
+  - aws-cdk-lib
+  - google-cloud-storage
+  - azure-storage-blob
+  - openai
+  - anthropic
+  - langchain
+  - transformers
+  - huggingface-hub
+  - opencv-python
+  - scipy
+  - sympy
+  - networkx
+  - nltk
+  - spacy
+  - gensim
+  - scrapy
+  - playwright
+  - pyautogui
+
+# Popular Go modules for typosquat detection
+popular_go:
+  - github.com/gin-gonic/gin
+  - github.com/gorilla/mux
+  - github.com/labstack/echo
+  - github.com/gofiber/fiber
+  - github.com/stretchr/testify
+  - github.com/spf13/cobra
+  - github.com/spf13/viper
+  - github.com/sirupsen/logrus
+  - go.uber.org/zap
+  - github.com/go-redis/redis
+  - gorm.io/gorm
+  - github.com/jackc/pgx
+  - go.mongodb.org/mongo-driver
+  - github.com/aws/aws-sdk-go
+  - cloud.google.com/go
+  - github.com/Azure/azure-sdk-for-go
+  - github.com/prometheus/client_golang
+  - github.com/grpc-ecosystem/grpc-gateway
+  - google.golang.org/grpc
+  - google.golang.org/protobuf
