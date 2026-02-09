@@ -3,624 +3,1008 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ClawGuard - Security Scanner for AI Agent Skills</title>
-  <meta name="description" content="Revolutionary security scanner for AI agent skills. LLM-powered semantic analysis, multi-skill attack chains, behavioral sandbox with honeypot traps.">
+  <title>ClawGuard - AI Agent Security Scanner</title>
+  <meta name="description" content="Next-generation security scanner for AI agent skills. LLM-powered threat detection with behavioral sandbox analysis.">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    
     :root {
-      --bg-dark: #0a0a0a;
-      --bg-card: #141414;
-      --coral: #FF4D4D;
-      --coral-bright: #FF6B6B;
-      --coral-dim: #CC3D3D;
-      --text: #E5E5E5;
-      --text-dim: #888;
-      --text-bright: #FFFFFF;
-      --green: #22C55E;
-      --yellow: #EAB308;
-      --red: #EF4444;
-      --blue: #3B82F6;
-      --purple: #8B5CF6;
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #0d1117;
+      --bg-tertiary: #161b22;
+      --bg-glass: rgba(13, 17, 23, 0.6);
+      --terminal-green: #39ff14;
+      --terminal-green-dim: #00cc00;
+      --terminal-green-glow: #39ff14;
+      --cyber-blue: #00d4ff;
+      --cyber-purple: #9d4edd;
+      --danger-red: #ff073a;
+      --warning-orange: #ff6b00;
+      --text-primary: #f0f6fc;
+      --text-secondary: #8b949e;
+      --text-dim: #58606b;
+      --border-primary: #21262d;
+      --border-glow: rgba(57, 255, 20, 0.3);
+      --shadow-glow: 0 0 20px rgba(57, 255, 20, 0.1);
     }
     
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html {
+      scroll-behavior: smooth;
+    }
     
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: var(--bg-dark);
-      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
       line-height: 1.6;
-      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
     }
     
+    /* Animated Grid Background */
+    .grid-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.03;
+      background-image: 
+        linear-gradient(rgba(57, 255, 20, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(57, 255, 20, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+    }
+    
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+    
+    /* Particle Animation */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+    
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: var(--terminal-green);
+      border-radius: 50%;
+      animation: float 6s ease-in-out infinite;
+      box-shadow: 0 0 10px var(--terminal-green);
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+      50% { transform: translateY(-100vh) rotate(180deg); opacity: 1; }
+    }
+    
+    /* Container */
     .container {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 0 24px;
+      padding: 0 2rem;
     }
     
-    /* Hero */
+    /* Navigation */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 1rem 0;
+      background: rgba(10, 10, 10, 0.8);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-primary);
+    }
+    
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--terminal-green);
+      text-decoration: none;
+      text-shadow: 0 0 10px var(--terminal-green);
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+    
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+    
+    .nav-links a:hover {
+      color: var(--terminal-green);
+      text-shadow: 0 0 5px var(--terminal-green);
+    }
+    
+    /* Hero Section */
     .hero {
-      padding: 80px 0 60px;
-      text-align: center;
-      background: linear-gradient(180deg, #1a0a0a 0%, var(--bg-dark) 100%);
-      border-bottom: 1px solid #222;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      background: radial-gradient(ellipse at center, rgba(57, 255, 20, 0.05) 0%, transparent 70%);
+    }
+    
+    .hero-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+    
+    .hero-text {
+      z-index: 10;
     }
     
     .hero-badge {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      background: rgba(255, 77, 77, 0.1);
-      border: 1px solid var(--coral-dim);
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      color: var(--coral);
-      margin-bottom: 24px;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(57, 255, 20, 0.1);
+      border: 1px solid var(--terminal-green);
+      border-radius: 2rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--terminal-green);
+      margin-bottom: 2rem;
+      box-shadow: 0 0 20px rgba(57, 255, 20, 0.2);
     }
     
     .hero h1 {
-      font-size: clamp(48px, 8vw, 72px);
-      font-weight: 800;
-      color: var(--text-bright);
-      margin-bottom: 16px;
-      letter-spacing: -2px;
+      font-size: clamp(3rem, 8vw, 5rem);
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, var(--terminal-green) 0%, var(--cyber-blue) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 0 30px rgba(57, 255, 20, 0.3);
     }
     
-    .hero h1 span {
-      color: var(--coral);
-    }
-    
-    .hero-tagline {
-      font-size: 22px;
-      color: var(--text-dim);
-      max-width: 700px;
-      margin: 0 auto 40px;
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
     }
     
     .hero-cta {
       display: flex;
-      gap: 16px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 48px;
+      gap: 1rem;
+      margin-bottom: 3rem;
     }
     
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 14px 28px;
-      border-radius: 8px;
-      font-size: 16px;
+      gap: 0.5rem;
+      padding: 1rem 2rem;
       font-weight: 600;
       text-decoration: none;
-      transition: all 0.2s;
+      border-radius: 0.5rem;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
     }
     
     .btn-primary {
-      background: var(--coral);
-      color: white;
+      background: linear-gradient(135deg, var(--terminal-green) 0%, var(--cyber-blue) 100%);
+      color: var(--bg-primary);
+      box-shadow: 0 10px 30px rgba(57, 255, 20, 0.3);
     }
     
     .btn-primary:hover {
-      background: var(--coral-bright);
       transform: translateY(-2px);
+      box-shadow: 0 20px 40px rgba(57, 255, 20, 0.4);
     }
     
     .btn-secondary {
-      background: var(--bg-card);
-      color: var(--text);
-      border: 1px solid #333;
+      background: var(--bg-glass);
+      color: var(--text-primary);
+      border: 1px solid var(--border-primary);
+      backdrop-filter: blur(10px);
     }
     
     .btn-secondary:hover {
-      border-color: var(--coral);
-      color: var(--coral);
+      border-color: var(--terminal-green);
+      box-shadow: 0 0 20px rgba(57, 255, 20, 0.2);
     }
     
-    /* Install box */
-    .install-box {
-      background: var(--bg-card);
-      border: 1px solid #333;
-      border-radius: 12px;
-      padding: 20px 32px;
-      display: inline-flex;
+    /* Install Command */
+    .install-cmd {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      display: flex;
       align-items: center;
-      gap: 16px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 15px;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      box-shadow: var(--shadow-glow);
     }
     
-    .install-box code {
-      color: var(--coral);
+    .install-cmd code {
+      color: var(--terminal-green);
+      font-size: 1rem;
     }
     
-    .install-box .copy-btn {
+    .copy-btn {
       background: none;
       border: none;
-      color: var(--text-dim);
+      color: var(--text-secondary);
       cursor: pointer;
-      padding: 8px;
-      border-radius: 6px;
-      transition: all 0.2s;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      transition: all 0.3s ease;
     }
     
-    .install-box .copy-btn:hover {
-      background: #222;
-      color: var(--coral);
+    .copy-btn:hover {
+      color: var(--terminal-green);
+      background: rgba(57, 255, 20, 0.1);
     }
     
-    /* Why section */
-    .section {
-      padding: 80px 0;
-    }
-    
-    .section-title {
-      font-size: 36px;
-      font-weight: 700;
-      margin-bottom: 16px;
-      color: var(--text-bright);
-    }
-    
-    .section-title span {
-      color: var(--coral);
-    }
-    
-    .section-subtitle {
-      color: var(--text-dim);
-      font-size: 18px;
-      max-width: 600px;
-      margin-bottom: 48px;
-    }
-    
-    /* Threat cards */
-    .threats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 24px;
-      margin-bottom: 48px;
-    }
-    
-    .threat-card {
-      background: var(--bg-card);
-      border: 1px solid #222;
-      border-radius: 12px;
-      padding: 24px;
-    }
-    
-    .threat-card .icon {
-      font-size: 32px;
-      margin-bottom: 16px;
-    }
-    
-    .threat-card h3 {
-      font-size: 18px;
-      margin-bottom: 8px;
-      color: var(--text-bright);
-    }
-    
-    .threat-card p {
-      color: var(--text-dim);
-      font-size: 14px;
-    }
-    
-    /* Protection layers */
-    .layers {
-      background: var(--bg-card);
-      border: 1px solid #222;
-      border-radius: 16px;
-      padding: 48px;
-    }
-    
-    .layer {
-      display: flex;
-      gap: 24px;
-      padding: 24px 0;
-      border-bottom: 1px solid #222;
-    }
-    
-    .layer:last-child {
-      border-bottom: none;
-    }
-    
-    .layer-number {
-      width: 48px;
-      height: 48px;
-      background: var(--coral);
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-    
-    .layer-content h3 {
-      font-size: 20px;
-      color: var(--text-bright);
-      margin-bottom: 8px;
-    }
-    
-    .layer-content .timing {
-      color: var(--text-dim);
-      font-size: 13px;
-      margin-bottom: 8px;
-    }
-    
-    .layer-content p {
-      color: var(--text-dim);
-    }
-    
-    /* Features */
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 24px;
-    }
-    
-    .feature-card {
-      background: var(--bg-card);
-      border: 1px solid #222;
-      border-radius: 12px;
-      padding: 28px;
-      transition: all 0.2s;
-    }
-    
-    .feature-card:hover {
-      border-color: var(--coral-dim);
-      transform: translateY(-4px);
-    }
-    
-    .feature-icon {
-      width: 48px;
-      height: 48px;
-      background: rgba(255, 77, 77, 0.1);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 16px;
-      font-size: 24px;
-    }
-    
-    .feature-card h3 {
-      font-size: 18px;
-      margin-bottom: 8px;
-      color: var(--text-bright);
-    }
-    
-    .feature-card p {
-      color: var(--text-dim);
-      font-size: 14px;
-    }
-    
-    /* Quick start */
-    .quickstart {
-      background: linear-gradient(180deg, var(--bg-dark) 0%, #0d0d0d 100%);
-      border-top: 1px solid #222;
-    }
-    
-    .code-block {
-      background: #0d0d0d;
-      border: 1px solid #222;
-      border-radius: 12px;
+    /* Terminal Demo */
+    .terminal-demo {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: 1rem;
       overflow: hidden;
-      max-width: 700px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     }
     
-    .code-header {
-      background: #181818;
-      padding: 12px 16px;
+    .terminal-header {
+      background: var(--bg-tertiary);
+      padding: 1rem;
       display: flex;
-      gap: 8px;
-      border-bottom: 1px solid #222;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border-primary);
     }
     
-    .code-dot {
+    .terminal-dot {
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      background: #333;
     }
     
-    .code-content {
-      padding: 24px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 14px;
+    .terminal-dot:nth-child(1) { background: #ff5f56; }
+    .terminal-dot:nth-child(2) { background: #ffbd2e; }
+    .terminal-dot:nth-child(3) { background: #27ca3f; }
+    
+    .terminal-title {
+      margin-left: 1rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
     }
     
-    .code-line {
-      margin-bottom: 8px;
+    .terminal-body {
+      padding: 2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      background: var(--bg-primary);
+      min-height: 300px;
     }
     
-    .code-line.comment {
-      color: #666;
+    .terminal-line {
+      margin-bottom: 0.5rem;
+      opacity: 0;
+      animation: fadeInUp 0.5s ease forwards;
     }
     
-    .code-line .prompt {
-      color: var(--coral);
-      margin-right: 8px;
+    .terminal-prompt {
+      color: var(--terminal-green);
     }
     
-    .code-line .cmd {
-      color: var(--text);
+    .terminal-command {
+      color: var(--cyber-blue);
+    }
+    
+    .terminal-output {
+      color: var(--text-secondary);
+    }
+    
+    .terminal-success {
+      color: var(--terminal-green);
+    }
+    
+    .terminal-warning {
+      color: var(--warning-orange);
+    }
+    
+    .terminal-error {
+      color: var(--danger-red);
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Stats Section */
+    .stats {
+      padding: 8rem 0;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-primary);
+      border-bottom: 1px solid var(--border-primary);
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 3rem;
+      text-align: center;
+    }
+    
+    .stat-item {
+      padding: 2rem;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-primary);
+      border-radius: 1rem;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    
+    .stat-item:hover {
+      border-color: var(--terminal-green);
+      box-shadow: var(--shadow-glow);
+      transform: translateY(-5px);
+    }
+    
+    .stat-number {
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--terminal-green);
+      text-shadow: 0 0 10px var(--terminal-green);
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-desc {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+    
+    /* Features Section */
+    .features {
+      padding: 8rem 0;
+    }
+    
+    .section-header {
+      text-align: center;
+      margin-bottom: 5rem;
+    }
+    
+    .section-title {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--terminal-green) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .section-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+    }
+    
+    .feature-card {
+      padding: 2.5rem;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-primary);
+      border-radius: 1rem;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--terminal-green), var(--cyber-blue));
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+    
+    .feature-card:hover::before {
+      transform: scaleX(1);
+    }
+    
+    .feature-card:hover {
+      border-color: var(--border-glow);
+      box-shadow: var(--shadow-glow);
+      transform: translateY(-5px);
+    }
+    
+    .feature-icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--terminal-green), var(--cyber-blue));
+      border-radius: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 10px 30px rgba(57, 255, 20, 0.2);
+    }
+    
+    .feature-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+    
+    .feature-desc {
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    
+    /* Threat Detection Section */
+    .threats {
+      padding: 8rem 0;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-primary);
+    }
+    
+    .threat-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-bottom: 4rem;
+    }
+    
+    .threat-card {
+      padding: 2rem;
+      background: var(--bg-primary);
+      border: 1px solid var(--danger-red);
+      border-radius: 1rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    
+    .threat-card:hover {
+      box-shadow: 0 0 30px rgba(255, 7, 58, 0.2);
+      transform: translateY(-5px);
+    }
+    
+    .threat-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    
+    .threat-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--danger-red);
+      margin-bottom: 1rem;
+    }
+    
+    .threat-desc {
+      color: var(--text-secondary);
+    }
+    
+    /* CTA Section */
+    .cta {
+      padding: 8rem 0;
+      text-align: center;
+      background: radial-gradient(ellipse at center, rgba(57, 255, 20, 0.1) 0%, transparent 70%);
+    }
+    
+    .cta h2 {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--terminal-green) 0%, var(--cyber-blue) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .cta p {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      margin-bottom: 3rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
     }
     
     /* Footer */
-    footer {
+    .footer {
+      padding: 4rem 0 2rem;
+      background: var(--bg-tertiary);
+      border-top: 1px solid var(--border-primary);
       text-align: center;
-      padding: 48px 0;
-      color: var(--text-dim);
-      font-size: 14px;
-      border-top: 1px solid #222;
     }
     
-    footer a {
-      color: var(--coral);
-      text-decoration: none;
-    }
-    
-    footer a:hover {
-      text-decoration: underline;
-    }
-    
-    /* Links */
-    .links {
+    .footer-links {
       display: flex;
-      gap: 24px;
       justify-content: center;
-      margin-top: 48px;
+      gap: 2rem;
+      margin-bottom: 2rem;
     }
     
-    .link-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 24px;
-      background: var(--bg-card);
-      border: 1px solid #333;
-      border-radius: 8px;
-      color: var(--text);
+    .footer-link {
+      color: var(--text-secondary);
       text-decoration: none;
-      font-size: 14px;
-      transition: all 0.2s;
+      transition: color 0.3s ease;
     }
     
-    .link-pill:hover {
-      border-color: var(--coral);
-      color: var(--coral);
+    .footer-link:hover {
+      color: var(--terminal-green);
     }
     
+    .footer-copy {
+      color: var(--text-dim);
+      font-size: 0.875rem;
+    }
+    
+    /* Responsive */
     @media (max-width: 768px) {
-      .hero { padding: 48px 0 40px; }
-      .section { padding: 48px 0; }
-      .layers { padding: 24px; }
-      .layer { flex-direction: column; gap: 16px; }
-      .install-box { flex-direction: column; padding: 16px; }
+      .hero-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        text-align: center;
+      }
+      
+      .hero-cta {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .nav-links {
+        display: none;
+      }
+      
+      .install-cmd {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      .section-title {
+        font-size: 2rem;
+      }
+      
+      .stat-number {
+        font-size: 2rem;
+      }
+      
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Hero -->
-  <section class="hero">
+  <!-- Grid Background -->
+  <div class="grid-bg"></div>
+  
+  <!-- Particles -->
+  <div class="particles" id="particles"></div>
+  
+  <!-- Navigation -->
+  <nav class="nav">
     <div class="container">
-      <div class="hero-badge">
-        🛡️ Security Scanner for AI Agent Skills
-      </div>
-      <h1>Claw<span>Guard</span></h1>
-      <p class="hero-tagline">
-        Revolutionary security scanner that thinks like an attacker. LLM-powered semantic analysis catches what pattern matching misses.
-      </p>
-      
-      <div class="hero-cta">
-        <a href="https://github.com/mikecavallo/clawguard" class="btn btn-primary">
-          ⭐ Star on GitHub
-        </a>
-        <a href="https://www.npmjs.com/package/@dribgib/clawguard" class="btn btn-secondary">
-          📦 View on npm
-        </a>
-      </div>
-      
-      <div class="install-box">
-        <code>npm install -g @dribgib/clawguard</code>
-        <button class="copy-btn" onclick="navigator.clipboard.writeText('npm install -g @dribgib/clawguard')">
-          📋
-        </button>
+      <div class="nav-inner">
+        <a href="#" class="logo">ClawGuard</a>
+        <ul class="nav-links">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#threats">Security</a></li>
+          <li><a href="#install">Install</a></li>
+          <li><a href="https://github.com/mikecavallo/clawguard">GitHub</a></li>
+        </ul>
       </div>
     </div>
-  </section>
+  </nav>
   
-  <!-- Why ClawGuard -->
-  <section class="section">
+  <!-- Hero Section -->
+  <section class="hero" id="home">
     <div class="container">
-      <h2 class="section-title"><span>⟩</span> The Problem</h2>
-      <p class="section-subtitle">
-        AI agents can install and run skills — code that extends their capabilities. But this creates a massive attack surface.
-      </p>
-      
-      <div class="threats-grid">
-        <div class="threat-card">
-          <div class="icon">🔑</div>
-          <h3>Credential Theft</h3>
-          <p>Skills that look helpful but steal your SSH keys, AWS credentials, and API tokens.</p>
-        </div>
-        <div class="threat-card">
-          <div class="icon">💬</div>
-          <h3>Prompt Injection</h3>
-          <p>Hidden instructions that hijack the agent's behavior — "ignore previous rules" attacks.</p>
-        </div>
-        <div class="threat-card">
-          <div class="icon">🔗</div>
-          <h3>Attack Chains</h3>
-          <p>Multiple "innocent" skills that combine to form credential exfiltration pipelines.</p>
-        </div>
-        <div class="threat-card">
-          <div class="icon">🎭</div>
-          <h3>Social Engineering</h3>
-          <p>Skills that manipulate the agent to bypass its own safety rules.</p>
-        </div>
-      </div>
-      
-      <p style="color: var(--text-dim); text-align: center;">
-        Traditional security tools don't catch these attacks because they scan for code patterns, not <em>intent</em>.
-      </p>
-    </div>
-  </section>
-  
-  <!-- How We Protect You -->
-  <section class="section" style="background: var(--bg-card);">
-    <div class="container">
-      <h2 class="section-title"><span>⟩</span> 5 Layers of Protection</h2>
-      <p class="section-subtitle">
-        Defense in depth. Each layer catches what the others miss.
-      </p>
-      
-      <div class="layers">
-        <div class="layer">
-          <div class="layer-number">1</div>
-          <div class="layer-content">
-            <h3>Static Analysis</h3>
-            <div class="timing">⚡ Instant • Always runs</div>
-            <p>36 patterns detecting credential theft, code injection, persistence, and obfuscation. Catches obvious attacks in milliseconds.</p>
+      <div class="hero-content">
+        <div class="hero-text">
+          <div class="hero-badge">
+            🛡️ Next-Gen AI Agent Security
+          </div>
+          <h1>ClawGuard</h1>
+          <p class="hero-subtitle">
+            Revolutionary security scanner that thinks like an attacker. LLM-powered semantic analysis catches what pattern matching misses.
+          </p>
+          <div class="hero-cta">
+            <a href="#install" class="btn btn-primary">
+              ⚡ Get Started
+            </a>
+            <a href="https://github.com/mikecavallo/clawguard" class="btn btn-secondary">
+              📚 Documentation
+            </a>
+          </div>
+          <div class="install-cmd">
+            <code>npm install -g @dribgib/clawguard</code>
+            <button class="copy-btn" onclick="copyCommand()">📋</button>
           </div>
         </div>
         
-        <div class="layer">
-          <div class="layer-number">2</div>
-          <div class="layer-content">
-            <h3>Semantic Analysis</h3>
-            <div class="timing">🧠 3-15 seconds • LLM-powered</div>
-            <p>Uses AI to understand skill intent. Catches prompt injection, capability-purpose mismatch, social engineering, and delayed triggers.</p>
+        <!-- Terminal Demo -->
+        <div class="terminal-demo">
+          <div class="terminal-header">
+            <div class="terminal-dot"></div>
+            <div class="terminal-dot"></div>
+            <div class="terminal-dot"></div>
+            <div class="terminal-title">ClawGuard Security Scan</div>
           </div>
-        </div>
-        
-        <div class="layer">
-          <div class="layer-number">3</div>
-          <div class="layer-content">
-            <h3>Attack Chain Detection</h3>
-            <div class="timing">🔗 Multi-skill analysis</div>
-            <p>Scans your entire skill library for dangerous combinations. Two "innocent" skills that together form an exfiltration pipeline? We catch that.</p>
-          </div>
-        </div>
-        
-        <div class="layer">
-          <div class="layer-number">4</div>
-          <div class="layer-content">
-            <h3>Behavioral Sandbox</h3>
-            <div class="timing">🍯 5-30 seconds • Docker</div>
-            <p>Runs skills in isolation with honeypot credential files. If the skill touches fake credentials → DEFINITIVE proof of malicious intent.</p>
-          </div>
-        </div>
-        
-        <div class="layer">
-          <div class="layer-number">5</div>
-          <div class="layer-content">
-            <h3>Known-Bad Database</h3>
-            <div class="timing">🚫 Instant lookup</div>
-            <p>Checks skill hash against community-reported malware. Known threats are blocked before analysis even runs.</p>
+          <div class="terminal-body" id="terminal">
+            <!-- Terminal content will be populated by JavaScript -->
           </div>
         </div>
       </div>
     </div>
   </section>
   
-  <!-- Features -->
-  <section class="section">
+  <!-- Stats Section -->
+  <section class="stats">
     <div class="container">
-      <h2 class="section-title"><span>⟩</span> Features</h2>
-      <p class="section-subtitle">Built for the agent security threat model.</p>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-number">36</div>
+          <div class="stat-label">Detection Patterns</div>
+          <div class="stat-desc">Static analysis rules</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">5</div>
+          <div class="stat-label">Scan Modes</div>
+          <div class="stat-desc">From fast to deep analysis</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">100%</div>
+          <div class="stat-label">Open Source</div>
+          <div class="stat-desc">Free forever</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">∞</div>
+          <div class="stat-label">AI Providers</div>
+          <div class="stat-desc">Anthropic, OpenAI, Ollama</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Defense in Depth</h2>
+        <p class="section-subtitle">
+          Five layers of protection that catch what traditional security tools miss
+        </p>
+      </div>
       
       <div class="features-grid">
         <div class="feature-card">
-          <div class="feature-icon">🔍</div>
-          <h3>Scan Local or Remote</h3>
-          <p>Scan skills from disk or directly from GitHub URLs. Sparse checkout means fast downloads.</p>
+          <div class="feature-icon">⚡</div>
+          <h3 class="feature-title">Static Analysis</h3>
+          <p class="feature-desc">
+            36 patterns detecting credential theft, code injection, persistence, and obfuscation. Catches obvious attacks in milliseconds.
+          </p>
         </div>
         
         <div class="feature-card">
-          <div class="feature-icon">🤖</div>
-          <h3>Multi-Provider AI</h3>
-          <p>Works with Anthropic, OpenAI, or local Ollama models. Your choice.</p>
+          <div class="feature-icon">🧠</div>
+          <h3 class="feature-title">Semantic Analysis</h3>
+          <p class="feature-desc">
+            LLM-powered intent detection. Understands skill purpose, catches prompt injection and social engineering attacks.
+          </p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">🔗</div>
+          <h3 class="feature-title">Attack Chain Detection</h3>
+          <p class="feature-desc">
+            Scans entire skill library for dangerous combinations. Two "innocent" skills forming an attack chain? We catch that.
+          </p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">🍯</div>
+          <h3 class="feature-title">Behavioral Sandbox</h3>
+          <p class="feature-desc">
+            Docker isolation with honeypot credentials. If a skill touches fake credentials → definitive proof of malicious intent.
+          </p>
         </div>
         
         <div class="feature-card">
           <div class="feature-icon">🚦</div>
-          <h3>CI/CD Gate</h3>
-          <p>Pre-install security gate with JSON output. Block dangerous skills before they're installed.</p>
+          <h3 class="feature-title">CI/CD Integration</h3>
+          <p class="feature-desc">
+            Pre-install security gate with JSON output. Block dangerous skills before they're installed in your agent.
+          </p>
         </div>
         
         <div class="feature-card">
           <div class="feature-icon">📊</div>
-          <h3>Intent Graphs</h3>
-          <p>Visualize data flow through skills. ASCII or Mermaid diagram output.</p>
-        </div>
-        
-        <div class="feature-card">
-          <div class="feature-icon">🖥️</div>
-          <h3>Interactive TUI</h3>
-          <p>Full-screen terminal interface for security scanning with style.</p>
-        </div>
-        
-        <div class="feature-card">
-          <div class="feature-icon">⚡</div>
-          <h3>Fast Mode</h3>
-          <p>Skip semantic analysis for instant scans. Static-only takes ~30ms.</p>
+          <h3 class="feature-title">Threat Visualization</h3>
+          <p class="feature-desc">
+            Data flow graphs and attack chain diagrams. See exactly how threats move through your agent's skill ecosystem.
+          </p>
         </div>
       </div>
     </div>
   </section>
   
-  <!-- Quick Start -->
-  <section class="section quickstart">
+  <!-- Threats Section -->
+  <section class="threats" id="threats">
     <div class="container">
-      <h2 class="section-title"><span>⟩</span> Quick Start</h2>
-      <p class="section-subtitle">Up and running in 60 seconds.</p>
-      
-      <div class="code-block">
-        <div class="code-header">
-          <div class="code-dot"></div>
-          <div class="code-dot"></div>
-          <div class="code-dot"></div>
-        </div>
-        <div class="code-content">
-          <div class="code-line comment"># Install globally</div>
-          <div class="code-line"><span class="prompt">$</span> <span class="cmd">npm install -g @dribgib/clawguard</span></div>
-          <div class="code-line comment"># Configure AI provider (optional)</div>
-          <div class="code-line"><span class="prompt">$</span> <span class="cmd">clawguard config</span></div>
-          <div class="code-line comment"># Scan a skill</div>
-          <div class="code-line"><span class="prompt">$</span> <span class="cmd">clawguard scan ./my-skill</span></div>
-          <div class="code-line comment"># Or scan from GitHub</div>
-          <div class="code-line"><span class="prompt">$</span> <span class="cmd">clawguard scan https://github.com/user/skill</span></div>
-          <div class="code-line comment"># Learn how we protect you</div>
-          <div class="code-line"><span class="prompt">$</span> <span class="cmd">clawguard about</span></div>
-        </div>
+      <div class="section-header">
+        <h2 class="section-title">The Agent Threat Landscape</h2>
+        <p class="section-subtitle">
+          AI agents can install and run skills — code that extends their capabilities. But this creates a massive attack surface.
+        </p>
       </div>
       
-      <div class="links">
-        <a href="https://github.com/mikecavallo/clawguard" class="link-pill">
-          GitHub →
+      <div class="threat-cards">
+        <div class="threat-card">
+          <div class="threat-icon">🔑</div>
+          <h3 class="threat-title">Credential Theft</h3>
+          <p class="threat-desc">
+            Skills that look helpful but steal your SSH keys, AWS credentials, and API tokens.
+          </p>
+        </div>
+        
+        <div class="threat-card">
+          <div class="threat-icon">💬</div>
+          <h3 class="threat-title">Prompt Injection</h3>
+          <p class="threat-desc">
+            Hidden instructions that hijack agent behavior — "ignore previous rules" attacks embedded in skills.
+          </p>
+        </div>
+        
+        <div class="threat-card">
+          <div class="threat-icon">🔗</div>
+          <h3 class="threat-title">Attack Chains</h3>
+          <p class="threat-desc">
+            Multiple "innocent" skills that combine to form credential exfiltration pipelines.
+          </p>
+        </div>
+        
+        <div class="threat-card">
+          <div class="threat-icon">🎭</div>
+          <h3 class="threat-title">Social Engineering</h3>
+          <p class="threat-desc">
+            Skills that manipulate the agent to bypass its own safety rules and expose sensitive data.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- CTA Section -->
+  <section class="cta" id="install">
+    <div class="container">
+      <h2>Secure Your Agent Today</h2>
+      <p>
+        Join the community protecting the agent ecosystem. Free, open source, and ready to deploy in minutes.
+      </p>
+      <div class="hero-cta">
+        <a href="#" class="btn btn-primary" onclick="copyCommand()">
+          📦 Install Now
         </a>
-        <a href="https://www.npmjs.com/package/@dribgib/clawguard" class="link-pill">
-          npm →
+        <a href="https://github.com/mikecavallo/clawguard" class="btn btn-secondary">
+          ⭐ Star on GitHub
         </a>
       </div>
     </div>
   </section>
   
   <!-- Footer -->
-  <footer>
+  <footer class="footer">
     <div class="container">
-      <p>Built for the agent internet. 🛡️</p>
-      <p style="margin-top: 8px;">
-        <a href="https://github.com/mikecavallo/clawguard">GitHub</a> · 
-        <a href="https://www.npmjs.com/package/@dribgib/clawguard">npm</a> · 
-        <a href="https://openclaw.ai">OpenClaw</a>
+      <div class="footer-links">
+        <a href="https://github.com/mikecavallo/clawguard" class="footer-link">GitHub</a>
+        <a href="https://www.npmjs.com/package/@dribgib/clawguard" class="footer-link">npm</a>
+        <a href="https://openclaw.ai" class="footer-link">OpenClaw</a>
+      </div>
+      <p class="footer-copy">
+        Built for the agent internet. Open source security for AI agents.
       </p>
     </div>
   </footer>
+  
+  <script>
+    // Particle Animation
+    function createParticles() {
+      const particlesContainer = document.getElementById('particles');
+      const particleCount = 50;
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 6 + 's';
+        particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
+        particlesContainer.appendChild(particle);
+      }
+    }
+    
+    // Terminal Animation
+    function typeTerminal() {
+      const terminal = document.getElementById('terminal');
+      const lines = [
+        { text: '$ clawguard scan ./suspicious-skill', type: 'prompt', delay: 500 },
+        { text: '', type: 'output', delay: 200 },
+        { text: '🛡️  ClawGuard Security Scanner v2.1.0', type: 'output', delay: 300 },
+        { text: '📂 Analyzing: ./suspicious-skill', type: 'output', delay: 400 },
+        { text: '', type: 'output', delay: 200 },
+        { text: '⚡ Static Analysis...', type: 'output', delay: 600 },
+        { text: '   ✓ File system access patterns', type: 'success', delay: 300 },
+        { text: '   ✓ Network request analysis', type: 'success', delay: 300 },
+        { text: '   ⚠ Found credential file access', type: 'warning', delay: 400 },
+        { text: '', type: 'output', delay: 200 },
+        { text: '🧠 Semantic Analysis...', type: 'output', delay: 600 },
+        { text: '   ✓ Intent classification', type: 'success', delay: 400 },
+        { text: '   ✓ Capability mapping', type: 'success', delay: 300 },
+        { text: '   ❌ THREAT DETECTED: Credential theft pattern', type: 'error', delay: 500 },
+        { text: '', type: 'output', delay: 200 },
+        { text: '🍯 Behavioral Sandbox...', type: 'output', delay: 600 },
+        { text: '   ✓ Docker environment ready', type: 'success', delay: 300 },
+        { text: '   ✓ Honeypot credentials deployed', type: 'success', delay: 400 },
+        { text: '   ❌ CRITICAL: Honeypot credential accessed!', type: 'error', delay: 600 },
+        { text: '', type: 'output', delay: 300 },
+        { text: '🚨 VERDICT: MALICIOUS (Confidence: 95%)', type: 'error', delay: 800 },
+        { text: '   Threats: credential-theft, data-exfiltration', type: 'error', delay: 400 },
+        { text: '   Recommendation: DO NOT INSTALL', type: 'error', delay: 400 },
+      ];
+      
+      let lineIndex = 0;
+      let totalDelay = 0;
+      
+      lines.forEach((line, index) => {
+        totalDelay += line.delay;
+        setTimeout(() => {
+          const lineElement = document.createElement('div');
+          lineElement.className = `terminal-line terminal-${line.type}`;
+          lineElement.style.animationDelay = '0s';
+          lineElement.textContent = line.text;
+          terminal.appendChild(lineElement);
+        }, totalDelay);
+      });
+      
+      // Restart animation after completion
+      setTimeout(() => {
+        terminal.innerHTML = '';
+        typeTerminal();
+      }, totalDelay + 5000);
+    }
+    
+    // Copy Command Function
+    function copyCommand() {
+      navigator.clipboard.writeText('npm install -g @dribgib/clawguard').then(() => {
+        // Show feedback
+        const originalText = event.target.textContent;
+        event.target.textContent = '✅';
+        setTimeout(() => {
+          event.target.textContent = originalText;
+        }, 1000);
+      });
+    }
+    
+    // Smooth scrolling for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+    
+    // Parallax effect
+    window.addEventListener('scroll', () => {
+      const scrolled = window.pageYOffset;
+      const parallaxElements = document.querySelectorAll('.hero');
+      
+      parallaxElements.forEach(element => {
+        const speed = 0.5;
+        element.style.transform = `translateY(${scrolled * speed}px)`;
+      });
+    });
+    
+    // Initialize animations
+    document.addEventListener('DOMContentLoaded', () => {
+      createParticles();
+      setTimeout(typeTerminal, 1000);
+    });
+    
+    // Intersection Observer for animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+    
+    // Observe elements for scroll animations
+    document.addEventListener('DOMContentLoaded', () => {
+      const animateElements = document.querySelectorAll('.feature-card, .stat-item, .threat-card');
+      animateElements.forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(el);
+      });
+    });
+  </script>
 </body>
 </html>
