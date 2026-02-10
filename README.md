@@ -130,12 +130,12 @@ clawguard graph ./my-skill -f mermaid   # Mermaid diagram
 
 | Command | What It Does |
 |---------|-------------|
-| `scan <path>` | Scan a single skill (local path or URL) |
-| `full <path>` | Run ALL analyzers (static + semantic + honeypot + graph) |
-| `library <path>` | Scan a skill library for multi-skill attack chains |
-| `sandbox <path>` | Run behavioral sandbox with honeypot traps (requires Docker) |
-| `honeypot <path>` | Scan for credential access patterns |
-| `graph <path>` | Generate data flow intent graph |
+| `scan &lt;path&gt;` | Scan a single skill (local path or URL) |
+| `full &lt;path&gt;` | Run ALL analyzers (static + semantic + honeypot + graph) |
+| `library &lt;path&gt;` | Scan a skill library for multi-skill attack chains |
+| `sandbox &lt;path&gt;` | Run behavioral sandbox with honeypot traps (requires Docker) |
+| `honeypot &lt;path&gt;` | Scan for credential access patterns |
+| `graph &lt;path&gt;` | Generate data flow intent graph |
 | `config` | Configure LLM provider and API keys |
 | `init` | Setup wizard |
 | `ui` | Launch interactive terminal interface |
@@ -144,24 +144,24 @@ clawguard graph ./my-skill -f mermaid   # Mermaid diagram
 ### Scan Options
 
 ```
-clawguard scan <path> [options]
+clawguard scan &lt;path&gt; [options]
 
   -f, --fast          Static analysis only (skip semantic)
   -d, --deep          Deep dependency source analysis
   -s, --sandbox       Run behavioral sandbox (requires Docker)
-  -o, --output <fmt>  Output format: md, json (default: md)
+  -o, --output &lt;fmt&gt;  Output format: md, json (default: md)
   -v, --verbose       Verbose output
-  --api-key <key>     Override API key for this scan
+  --api-key &lt;key&gt;     Override API key for this scan
   --keep              Keep downloaded files (when scanning URLs)
 ```
 
 ### Library Options
 
 ```
-clawguard library <path> [options]
+clawguard library &lt;path&gt; [options]
 
   -f, --fast          Pattern analysis only (skip semantic chains)
-  -o, --output <fmt>  Output format: md, json
+  -o, --output &lt;fmt&gt;  Output format: md, json
   -v, --verbose       Verbose output
 ```
 
