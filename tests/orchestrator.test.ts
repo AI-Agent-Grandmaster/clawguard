@@ -119,4 +119,26 @@ describe('Orchestrator', () => {
       .rejects
       .toThrow('Path is not a directory');
   });
+
+  it('refuses to scan system root /', async () => {
+    const orchestrator = createOrchestrator();
+    await expect(orchestrator.scan({ path: '/' }))
+      .rejects
+      .toThrow('Refusing to scan system directory');
+  });
+
+  it('refuses to scan /etc', async () => {
+    const orchestrator = createOrchestrator();
+    await expect(orchestrator.scan({ path: '/etc' }))
+      .rejects
+      .toThrow('Refusing to scan system directory');
+  });
+
+  it('refuses to scan home directory root', async () => {
+    const orchestrator = createOrchestrator();
+    const home = process.env.HOME || '/home';
+    await expect(orchestrator.scan({ path: home }))
+      .rejects
+      .toThrow('Refusing to scan home directory root');
+  });
 });
