@@ -6,7 +6,6 @@
  *
  * Supports multiple providers: Anthropic, OpenAI, and local models (Ollama).
  */
-import Anthropic from '@anthropic-ai/sdk';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { glob } from 'glob';
@@ -86,7 +85,15 @@ Respond with ONLY the JSON, no other text.`;
 /**
  * Create Anthropic provider
  */
-function createAnthropicProvider(apiKey, model) {
+async function createAnthropicProvider(apiKey, model) {
+    let Anthropic;
+    try {
+        Anthropic = (await import('@anthropic-ai/sdk')).default;
+    }
+    catch {
+        throw new Error('Anthropic SDK not installed. Run: npm install @anthropic-ai/sdk\n' +
+            'Or switch to OpenAI/Ollama with: clawguard config');
+    }
     const client = new Anthropic({ apiKey });
     return {
         async call(prompt, maxTokens) {
@@ -159,22 +166,26 @@ export class SemanticAnalyzer {
     name = 'semantic';
     provider;
     maxTokens;
-    constructor(options = {}) {
+    constructor(provider, maxTokens) {
+        this.provider = provider;
+        this.maxTokens = maxTokens;
+    }
+    static async create(options = {}) {
         const providerType = options.provider || 'anthropic';
-        const model = options.model || this.getDefaultModel(providerType);
-        this.maxTokens = options.maxTokens || 4096;
-        // Create appropriate provider
+        const model = options.model || SemanticAnalyzer.getDefaultModelStatic(providerType);
+        const maxTokens = options.maxTokens || 4096;
+        let provider;
         switch (providerType) {
             case 'openai': {
                 const apiKey = options.apiKey || process.env.OPENAI_API_KEY;
                 if (!apiKey) {
                     throw new Error('OpenAI API key required for semantic analysis. Run `clawguard config` or set OPENAI_API_KEY');
                 }
-                this.provider = createOpenAIProvider(apiKey, model);
+                provider = createOpenAIProvider(apiKey, model);
                 break;
             }
             case 'local': {
-                this.provider = createLocalProvider(model, options.baseUrl);
+                provider = createLocalProvider(model, options.baseUrl);
                 break;
             }
             case 'anthropic':
@@ -183,9 +194,18 @@ export class SemanticAnalyzer {
                 if (!apiKey) {
                     throw new Error('Anthropic API key required for semantic analysis. Run `clawguard config` or set ANTHROPIC_API_KEY');
                 }
-                this.provider = createAnthropicProvider(apiKey, model);
+                provider = await createAnthropicProvider(apiKey, model);
                 break;
             }
+        }
+        return new SemanticAnalyzer(provider, maxTokens);
+    }
+    static getDefaultModelStatic(provider) {
+        switch (provider) {
+            case 'openai': return 'gpt-4o';
+            case 'local': return 'llama3:70b';
+            case 'anthropic':
+            default: return 'claude-sonnet-4-20250514';
         }
     }
     getDefaultModel(provider) {
@@ -331,7 +351,7 @@ export class SemanticAnalyzer {
  */
 export async function createSemanticAnalyzerFromConfig(overrideApiKey) {
     const config = await loadConfig();
-    return new SemanticAnalyzer({
+    return SemanticAnalyzer.create({
         provider: config.provider,
         model: config.model,
         apiKey: overrideApiKey || config.apiKey
@@ -340,7 +360,7 @@ export async function createSemanticAnalyzerFromConfig(overrideApiKey) {
 /**
  * Create a semantic analyzer instance with explicit options
  */
-export function createSemanticAnalyzer(options = {}) {
-    return new SemanticAnalyzer(options);
+export async function createSemanticAnalyzer(options = {}) {
+    return SemanticAnalyzer.create(options);
 }
 export default createSemanticAnalyzer;

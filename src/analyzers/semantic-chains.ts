@@ -10,7 +10,6 @@
  * - Subtle capability abuse combinations
  */
 
-import Anthropic from '@anthropic-ai/sdk';
 import { readFile } from 'fs/promises';
 import { join, basename } from 'path';
 import { glob } from 'glob';
@@ -163,6 +162,14 @@ export async function analyzeSemanticChains(
     return [];
   }
 
+  let Anthropic;
+  try {
+    Anthropic = (await import('@anthropic-ai/sdk')).default;
+  } catch {
+    console.warn('Anthropic SDK not installed. Skipping semantic chain analysis.');
+    console.warn('Run: npm install @anthropic-ai/sdk');
+    return [];
+  }
   const client = new Anthropic({ apiKey });
   const skillsContent = await gatherSkillsContent(skillPaths);
   

@@ -9,7 +9,6 @@
  * - Delayed/conditional attacks across skills
  * - Subtle capability abuse combinations
  */
-import Anthropic from '@anthropic-ai/sdk';
 import { readFile } from 'fs/promises';
 import { join, basename } from 'path';
 import { glob } from 'glob';
@@ -126,6 +125,15 @@ export async function analyzeSemanticChains(skillPaths, options = {}) {
     const apiKey = options.apiKey || config.apiKey || process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
         console.warn('Semantic chain analysis requires API key');
+        return [];
+    }
+    let Anthropic;
+    try {
+        Anthropic = (await import('@anthropic-ai/sdk')).default;
+    }
+    catch {
+        console.warn('Anthropic SDK not installed. Skipping semantic chain analysis.');
+        console.warn('Run: npm install @anthropic-ai/sdk');
         return [];
     }
     const client = new Anthropic({ apiKey });

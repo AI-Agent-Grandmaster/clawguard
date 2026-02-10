@@ -182,7 +182,7 @@ export class Orchestrator {
         // Load config for provider/model settings
         const config = await loadConfig();
         
-        const semanticAnalyzer = createSemanticAnalyzer({ 
+        const semanticAnalyzer = await createSemanticAnalyzer({
           apiKey: options.apiKey || config.apiKey,
           provider: config.provider,
           model: config.model,

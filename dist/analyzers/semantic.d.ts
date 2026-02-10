@@ -18,7 +18,9 @@ export declare class SemanticAnalyzer implements Analyzer {
     name: string;
     private provider;
     private maxTokens;
-    constructor(options?: SemanticAnalyzerOptions);
+    private constructor();
+    static create(options?: SemanticAnalyzerOptions): Promise<SemanticAnalyzer>;
+    private static getDefaultModelStatic;
     private getDefaultModel;
     analyze(skillPath: string): Promise<Finding[]>;
     private gatherSkillContent;
@@ -32,5 +34,5 @@ export declare function createSemanticAnalyzerFromConfig(overrideApiKey?: string
 /**
  * Create a semantic analyzer instance with explicit options
  */
-export declare function createSemanticAnalyzer(options?: SemanticAnalyzerOptions): SemanticAnalyzer;
+export declare function createSemanticAnalyzer(options?: SemanticAnalyzerOptions): Promise<SemanticAnalyzer>;
 export default createSemanticAnalyzer;
