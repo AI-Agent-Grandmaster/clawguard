@@ -457,6 +457,11 @@ async function runScan(skillPath, options) {
     let runSemantic = !skipSemantic && (config.configured || !!options.apiKey);
     // Get API key
     let apiKey = options.apiKey;
+    if (apiKey) {
+        console.log('⚠️  Passing API keys via --api-key is visible in shell history and process lists.');
+        console.log('   Prefer: export CLAWGUARD_API_KEY=your-key');
+        console.log('');
+    }
     if (runSemantic && !apiKey) {
         apiKey = await getApiKey();
         if (!apiKey) {

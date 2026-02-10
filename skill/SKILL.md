@@ -39,7 +39,7 @@ clawguard config
 
 ## Scan Modes
 
-- **Static Analysis**: 36 patterns for credential theft, code injection, persistence, obfuscation
+- **Static Analysis**: 60+ patterns for credential theft, code injection, persistence, obfuscation
 - **Semantic Analysis** (`--deep`): LLM-powered intent understanding via Claude/OpenAI/Ollama
 - **Sandbox** (`sandbox`): Docker container with honeypot credentials to catch runtime attacks
 - **Attack Chains**: Multi-skill combination analysis for coordinated threats

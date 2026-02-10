@@ -105,10 +105,6 @@ export interface SandboxAnalyzer {
   analyze(skillPath: string): Promise<Finding[]>;
 }
 
-export interface SandboxAnalyzer {
-  analyze(skillPath: string): Promise<Finding[]>;
-}
-
 // ============== Risk Scoring ==============
 
 export const SEVERITY_WEIGHTS: Record<Severity, number> = {

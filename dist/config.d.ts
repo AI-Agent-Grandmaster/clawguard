@@ -59,7 +59,8 @@ export declare function saveConfig(config: ClawGuardConfig): Promise<void>;
  */
 export declare function isConfigured(): Promise<boolean>;
 /**
- * Get API key from config or environment
+ * Get API key from environment or config.
+ * Priority: CLAWGUARD_API_KEY > provider-specific env var > stored config
  */
 export declare function getApiKey(): Promise<string | undefined>;
 /**

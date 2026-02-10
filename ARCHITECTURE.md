@@ -249,7 +249,7 @@ For sophisticated attacks, use heuristics:
 
 **Responsibilities:**
 - Run skill in isolated Docker container
-- Mock OpenClaw agent environment
+- Mock agent environment
 - Monitor syscalls (via strace/seccomp)
 - Capture network traffic
 - Log file system access
@@ -318,132 +318,51 @@ interface SandboxResult {
 clawguard/
 ├── package.json
 ├── tsconfig.json
+├── eslint.config.js
 ├── src/
-│   ├── index.ts              # Main entry
-│   ├── cli.ts                # CLI argument parsing
-│   ├── orchestrator.ts       # Scan coordination
-│   ├── types.ts              # Shared interfaces
+│   ├── index.ts               # Library exports
+│   ├── cli.ts                 # CLI command handler (15 commands)
+│   ├── orchestrator.ts        # Skill loading & analyzer coordination
+│   ├── types.ts               # Shared TypeScript interfaces
+│   ├── config.ts              # LLM provider configuration
+│   ├── report.ts              # Report generation (JSON, MD, HTML)
+│   ├── fetch.ts               # GitHub/URL skill fetching
+│   ├── database.ts            # Known-bad skill database
+│   ├── reputation.ts          # Author/skill reputation system
+│   ├── signing.ts             # Cryptographic skill signing
+│   ├── diff.ts                # Version differential analysis
+│   ├── monitor.ts             # Continuous monitoring daemon
+│   ├── dashboard.ts           # Web dashboard
+│   ├── tui.ts                 # Interactive terminal UI
+│   ├── help.ts                # Help text system
 │   ├── analyzers/
-│   │   ├── static.ts         # Static code analysis
-│   │   ├── deps.ts           # Dependency scanning
-│   │   ├── prompt.ts         # SKILL.md analysis
-│   │   └── sandbox.ts        # Behavioral sandbox
+│   │   ├── static.ts          # 60+ pattern static code analysis
+│   │   ├── deps.ts            # Dependency & supply chain scanner
+│   │   ├── prompt.ts          # Prompt injection detection
+│   │   ├── semantic.ts        # LLM-powered intent analysis
+│   │   ├── chains.ts          # Multi-skill attack chain detection
+│   │   ├── semantic-chains.ts # LLM-based chain analysis
+│   │   ├── honeypot.ts        # Credential access pattern scanner
+│   │   ├── sandbox.ts         # Docker behavioral sandbox
+│   │   └── intent-graph.ts    # Data flow visualization
 │   ├── patterns/
-│   │   ├── code.yaml         # Code detection patterns
-│   │   ├── deps.yaml         # Known bad packages
-│   │   └── prompt.yaml       # Prompt injection patterns
-│   ├── report.ts             # Report generation
+│   │   ├── code.yaml          # 60+ code vulnerability patterns
+│   │   ├── deps.yaml          # Known malicious packages (npm, pip, go)
+│   │   └── prompt.yaml        # 30+ prompt injection patterns
 │   └── utils/
-│       ├── ast.ts            # AST parsing helpers
-│       ├── levenshtein.ts    # String distance
-│       └── registry.ts       # npm/pip registry checks
+│       ├── ast.ts             # JavaScript AST parsing (Acorn)
+│       ├── levenshtein.ts     # String distance for typosquat detection
+│       └── registry.ts        # npm/PyPI registry validation
+├── api/
+│   └── server.ts              # Known-bad database REST API
 ├── tests/
-│   ├── fixtures/             # Test skills (safe and malicious)
-│   └── *.test.ts
-└── reports/                   # Generated reports
-```
-
-## Build Plan
-
-### Phase 3a: Core Infrastructure (Agent 1)
-- package.json, tsconfig.json
-- src/types.ts
-- src/cli.ts
-- src/orchestrator.ts
-- Basic test harness
-
-### Phase 3b: Static Analyzer (Agent 2)
-- src/analyzers/static.ts
-- src/patterns/code.yaml
-- src/utils/ast.ts
-- Tests with malicious fixtures
-
-### Phase 3c: Dependency Scanner (Agent 3)
-- src/analyzers/deps.ts
-- src/patterns/deps.yaml
-- src/utils/levenshtein.ts
-- src/utils/registry.ts
-- Tests
-
-### Phase 3d: Prompt Analyzer (Agent 4)
-- src/analyzers/prompt.ts
-- src/patterns/prompt.yaml
-- SKILL.md parsing
-- Tests
-
-### Phase 3e: Report Generator (Agent 1 or 5)
-- src/report.ts
-- JSON, Markdown, HTML templates
-
-### Phase 4: Integration
-- Wire all modules together
-- End-to-end tests
-- CLI polish
-
-### Phase 5: Sandbox (Optional/Later)
-- Docker integration
-- Syscall monitoring
-- Network capture
-
-## Usage
-
-```bash
-# Install
-npm install -g clawguard
-
-# Scan local skill
-clawguard scan ./my-skill
-
-# Scan from URL
-clawguard scan https://github.com/user/skill
-
-# Deep scan with dependency source analysis
-clawguard scan ./my-skill --deep
-
-# Output formats
-clawguard scan ./my-skill -o json > report.json
-clawguard scan ./my-skill -o md > report.md
-
-# Scan entire ClawHub
-clawguard scan-registry clawhub --output ./reports/
-```
-
-## Risk Scoring
-
-```
-Score = Σ(finding.weight × severity_multiplier)
-
-Severity multipliers:
-- critical: 25
-- high: 10
-- medium: 4
-- low: 1
-
-Risk levels:
-- 0-10: SAFE
-- 11-25: LOW
-- 26-50: MEDIUM
-- 51-75: HIGH
-- 76+: CRITICAL
-```
-
-## Dependencies
-
-```json
-{
-  "dependencies": {
-    "commander": "^11.0.0",
-    "yaml": "^2.3.0",
-    "chalk": "^5.3.0",
-    "glob": "^10.3.0",
-    "@babel/parser": "^7.23.0",
-    "acorn": "^8.11.0",
-    "acorn-walk": "^8.3.0"
-  },
-  "devDependencies": {
-    "typescript": "^5.3.0",
-    "vitest": "^1.0.0",
-    "@types/node": "^20.0.0"
-  }
-}
+│   ├── deps.test.ts           # Dependency scanner tests
+│   ├── prompt.test.ts         # Prompt analyzer tests
+│   └── fixtures/              # 10 test skills (malicious + safe)
+├── skill/
+│   └── SKILL.md               # ClawGuard as an OpenClaw skill
+├── site/
+│   └── index.html             # Marketing site (GitHub Pages)
+└── docs/
+    └── index.html             # Documentation site
 ```

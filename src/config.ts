@@ -154,20 +154,28 @@ export async function isConfigured(): Promise<boolean> {
 }
 
 /**
- * Get API key from config or environment
+ * Get API key from environment or config.
+ * Priority: CLAWGUARD_API_KEY > provider-specific env var > stored config
  */
 export async function getApiKey(): Promise<string | undefined> {
+  // Universal env var takes top priority
+  if (process.env.CLAWGUARD_API_KEY) {
+    return process.env.CLAWGUARD_API_KEY;
+  }
+
   const config = await loadConfig();
-  
+
+  // Provider-specific env var
+  const provider = PROVIDERS[config.provider];
+  if (provider?.envVar && process.env[provider.envVar]) {
+    return process.env[provider.envVar];
+  }
+
+  // Stored config (least preferred)
   if (config.apiKey) {
     return config.apiKey;
   }
-  
-  const provider = PROVIDERS[config.provider];
-  if (provider?.envVar) {
-    return process.env[provider.envVar];
-  }
-  
+
   return undefined;
 }
 

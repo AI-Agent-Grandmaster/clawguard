@@ -34,7 +34,7 @@ const DATA_SOURCES = [
     { pattern: /Documents|Desktop|Downloads/g, label: 'User Documents', risk: 'medium', category: 'personal' },
     // Agent-specific
     { pattern: /memory\/.*\.md|MEMORY\.md/g, label: 'Agent Memory', risk: 'high', category: 'agent' },
-    { pattern: /\.openclaw/g, label: 'OpenClaw Config', risk: 'high', category: 'agent' },
+    { pattern: /\.openclaw|\.clawdbot/g, label: 'Agent Platform Config', risk: 'high', category: 'agent' },
     { pattern: /workspace\//g, label: 'Workspace Files', risk: 'medium', category: 'agent' },
 ];
 // Data sinks (where data can go)

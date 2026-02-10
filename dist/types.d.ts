@@ -86,9 +86,6 @@ export interface PromptAnalyzer {
 export interface SandboxAnalyzer {
     analyze(skillPath: string): Promise<Finding[]>;
 }
-export interface SandboxAnalyzer {
-    analyze(skillPath: string): Promise<Finding[]>;
-}
 export declare const SEVERITY_WEIGHTS: Record<Severity, number>;
 export declare const RISK_THRESHOLDS: {
     readonly SAFE: 10;
