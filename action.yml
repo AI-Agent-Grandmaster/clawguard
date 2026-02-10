@@ -1,0 +1,145 @@
+name: 'ClawGuard Security Scanner'
+description: 'Scan AI agent skills for security threats — static analysis, dependency scanning, prompt injection detection'
+author: 'Mike Cavallo'
+
+branding:
+  icon: 'shield'
+  color: 'green'
+
+inputs:
+  path:
+    description: 'Path to the skill directory to scan'
+    required: true
+    default: '.'
+  severity-threshold:
+    description: 'Minimum severity to fail the action (critical, high, medium, low)'
+    required: false
+    default: 'high'
+  output-format:
+    description: 'Output format (md, json)'
+    required: false
+    default: 'md'
+  semantic:
+    description: 'Enable LLM-powered semantic analysis (requires api-key)'
+    required: false
+    default: 'false'
+  api-key:
+    description: 'API key for semantic analysis (use secrets!)'
+    required: false
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '20'
+
+outputs:
+  risk-level:
+    description: 'Risk level (SAFE, LOW, MEDIUM, HIGH, CRITICAL)'
+    value: ${{ steps.scan.outputs.risk-level }}
+  risk-score:
+    description: 'Risk score (0-100)'
+    value: ${{ steps.scan.outputs.risk-score }}
+  findings-count:
+    description: 'Total number of findings'
+    value: ${{ steps.scan.outputs.findings-count }}
+  report:
+    description: 'Full scan report'
+    value: ${{ steps.scan.outputs.report }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Install ClawGuard
+      shell: bash
+      run: npm install -g @dribgib/clawguard
+
+    - name: Run scan
+      id: scan
+      shell: bash
+      env:
+        CLAWGUARD_API_KEY: ${{ inputs.api-key }}
+      run: |
+        SCAN_ARGS="${{ inputs.path }}"
+        SCAN_ARGS="$SCAN_ARGS --output json"
+
+        if [ "${{ inputs.semantic }}" = "true" ] && [ -n "$CLAWGUARD_API_KEY" ]; then
+          SCAN_ARGS="$SCAN_ARGS"
+        else
+          SCAN_ARGS="$SCAN_ARGS --fast"
+        fi
+
+        # Run scan and capture output
+        set +e
+        RESULT=$(clawguard scan $SCAN_ARGS 2>&1)
+        EXIT_CODE=$?
+        set -e
+
+        # Parse JSON output for structured data
+        RISK_LEVEL=$(echo "$RESULT" | jq -r '.riskLevel // "UNKNOWN"' 2>/dev/null || echo "UNKNOWN")
+        RISK_SCORE=$(echo "$RESULT" | jq -r '.riskScore // 0' 2>/dev/null || echo "0")
+        FINDINGS_COUNT=$(echo "$RESULT" | jq -r '.findings | length' 2>/dev/null || echo "0")
+
+        echo "risk-level=$RISK_LEVEL" >> "$GITHUB_OUTPUT"
+        echo "risk-score=$RISK_SCORE" >> "$GITHUB_OUTPUT"
+        echo "findings-count=$FINDINGS_COUNT" >> "$GITHUB_OUTPUT"
+
+        # Store full report (truncate for output limits)
+        REPORT=$(echo "$RESULT" | head -c 50000)
+        {
+          echo "report<<CLAWGUARD_EOF"
+          echo "$REPORT"
+          echo "CLAWGUARD_EOF"
+        } >> "$GITHUB_OUTPUT"
+
+        # Display human-readable report
+        if [ "${{ inputs.output-format }}" = "md" ]; then
+          clawguard scan ${{ inputs.path }} --fast 2>&1 || true
+        else
+          echo "$RESULT" | jq '.' 2>/dev/null || echo "$RESULT"
+        fi
+
+        echo ""
+        echo "Risk Level: $RISK_LEVEL ($RISK_SCORE/100)"
+        echo "Findings: $FINDINGS_COUNT"
+
+    - name: Check threshold
+      shell: bash
+      run: |
+        RISK_LEVEL="${{ steps.scan.outputs.risk-level }}"
+        THRESHOLD="${{ inputs.severity-threshold }}"
+
+        # Map levels to numbers for comparison
+        level_to_num() {
+          case "$1" in
+            SAFE)     echo 0 ;;
+            LOW)      echo 1 ;;
+            MEDIUM)   echo 2 ;;
+            HIGH)     echo 3 ;;
+            CRITICAL) echo 4 ;;
+            *)        echo 0 ;;
+          esac
+        }
+
+        threshold_to_num() {
+          case "$1" in
+            low)      echo 1 ;;
+            medium)   echo 2 ;;
+            high)     echo 3 ;;
+            critical) echo 4 ;;
+            *)        echo 3 ;;
+          esac
+        }
+
+        RISK_NUM=$(level_to_num "$RISK_LEVEL")
+        THRESHOLD_NUM=$(threshold_to_num "$THRESHOLD")
+
+        if [ "$RISK_NUM" -ge "$THRESHOLD_NUM" ]; then
+          echo "::error::ClawGuard: $RISK_LEVEL risk detected (threshold: $THRESHOLD)"
+          exit 1
+        else
+          echo "ClawGuard: $RISK_LEVEL risk is within threshold ($THRESHOLD)"
+        fi
