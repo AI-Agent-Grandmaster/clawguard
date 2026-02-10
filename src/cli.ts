@@ -13,6 +13,7 @@ import {
   registerToolCommands,
   registerServiceCommands,
   registerInfoCommands,
+  registerUpdateCommands,
 } from './commands/index.js';
 
 const VERSION = '1.0.0';
@@ -33,6 +34,7 @@ function createProgram(): Command {
   registerToolCommands(program);
   registerServiceCommands(program);
   registerInfoCommands(program);
+  registerUpdateCommands(program);
 
   return program;
 }
