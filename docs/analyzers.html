@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analyzers — ClawGuard Docs</title>
+  <meta name="description" content="Deep dive into ClawGuard's 6 analysis layers: static, dependency, prompt injection, semantic, attack chains, and behavioral sandbox.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="grid-bg"></div>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="container">
+      <div class="nav-inner">
+        <a href="index.html" class="logo">ClawGuard</a>
+        <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="getting-started.html">Getting Started</a></li>
+          <li><a href="analyzers.html" class="active">Analyzers</a></li>
+          <li><a href="cli-reference.html">CLI Reference</a></li>
+          <li><a href="github-action.html">GitHub Action</a></li>
+          <li><a href="patterns.html">Patterns</a></li>
+          <li><a href="https://github.com/mikecavallo/clawguard">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-wrapper">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-title">On this page</div>
+        <ul class="sidebar-links">
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#static">Static Analyzer</a></li>
+          <li><a href="#dependency">Dependency Analyzer</a></li>
+          <li><a href="#prompt-injection">Prompt Injection</a></li>
+          <li><a href="#semantic">Semantic Analyzer</a></li>
+          <li><a href="#attack-chains">Attack Chains</a></li>
+          <li><a href="#sandbox">Behavioral Sandbox</a></li>
+          <li><a href="#risk-scoring">Risk Scoring</a></li>
+        </ul>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="content">
+        <h1>Analyzers</h1>
+        <p class="page-subtitle">ClawGuard uses 6 analysis layers to catch threats that any single technique would miss. Each layer targets a different class of attack.</p>
+
+        <!-- Overview -->
+        <h2 id="overview">Overview</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Analyzer</th>
+              <th>Speed</th>
+              <th>Requires</th>
+              <th>What It Catches</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Static</strong></td>
+              <td>~30ms</td>
+              <td>Nothing</td>
+              <td>Code patterns, obfuscation, dangerous functions</td>
+            </tr>
+            <tr>
+              <td><strong>Dependency</strong></td>
+              <td>~300ms</td>
+              <td>Network (optional)</td>
+              <td>Malicious packages, typosquats, install scripts</td>
+            </tr>
+            <tr>
+              <td><strong>Prompt Injection</strong></td>
+              <td>~10ms</td>
+              <td>Nothing</td>
+              <td>Instruction overrides, hidden unicode, homoglyphs</td>
+            </tr>
+            <tr>
+              <td><strong>Semantic</strong></td>
+              <td>3-15s</td>
+              <td>API key</td>
+              <td>Malicious intent, capability abuse, social engineering</td>
+            </tr>
+            <tr>
+              <td><strong>Attack Chains</strong></td>
+              <td>~100ms</td>
+              <td>Multiple skills</td>
+              <td>Dangerous capability combinations across skills</td>
+            </tr>
+            <tr>
+              <td><strong>Sandbox</strong></td>
+              <td>5-30s</td>
+              <td>Docker</td>
+              <td>Runtime credential theft, network exfiltration</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <hr>
+
+        <!-- Static Analyzer -->
+        <h2 id="static">Static Analyzer</h2>
+
+        <p>The static analyzer scans all code files using 60+ regex patterns defined in <code>patterns/code.yaml</code>. It also performs obfuscation detection and AST (Abstract Syntax Tree) analysis for JavaScript files.</p>
+
+        <h3>Scanned File Types</h3>
+        <p>JavaScript (<code>.js</code>, <code>.mjs</code>, <code>.cjs</code>, <code>.jsx</code>, <code>.tsx</code>), TypeScript (<code>.ts</code>, <code>.mts</code>), Python (<code>.py</code>), Shell (<code>.sh</code>, <code>.bash</code>, <code>.zsh</code>), Ruby, Perl, PHP, Go, Rust, Markdown, YAML, JSON, TOML, and config files.</p>
+
+        <h3>Detection Categories</h3>
+
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Category</th>
+              <th>Examples</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>T-CODE-001</code></td>
+              <td>Malicious commands</td>
+              <td><code>curl | bash</code>, <code>wget | sh</code>, silent curl + execute</td>
+            </tr>
+            <tr>
+              <td><code>T-CODE-002</code></td>
+              <td>Obfuscation</td>
+              <td>base64 decode + exec, <code>eval(atob(...))</code>, hex encoding, <code>_0x</code> variables, JS packers</td>
+            </tr>
+            <tr>
+              <td><code>T-CODE-003</code></td>
+              <td>Fetch and execute</td>
+              <td><code>fetch().then(eval)</code>, dynamic <code>require()</code>, dynamic <code>import()</code></td>
+            </tr>
+            <tr>
+              <td><code>T-CODE-004</code></td>
+              <td>Credential access</td>
+              <td><code>process.env.*KEY</code>, <code>.ssh/id_rsa</code>, <code>.aws/credentials</code></td>
+            </tr>
+            <tr>
+              <td><code>T-PERSIST</code></td>
+              <td>Persistence</td>
+              <td><code>>> .bashrc</code>, crontab, systemd services, git hooks</td>
+            </tr>
+            <tr>
+              <td><code>T-EXFIL</code></td>
+              <td>Exfiltration</td>
+              <td>curl POST with data, webhook.site, requestbin, pipedream</td>
+            </tr>
+            <tr>
+              <td><code>T-CRYPTO</code></td>
+              <td>Crypto targeting</td>
+              <td><code>window.ethereum</code>, MetaMask, wallet drainer functions, private key access</td>
+            </tr>
+            <tr>
+              <td><code>T-INTERCEPT</code></td>
+              <td>Network interception</td>
+              <td>XHR prototype hijack, fetch replacement, Proxy handlers</td>
+            </tr>
+            <tr>
+              <td><code>T-CODE-006</code></td>
+              <td>Dangerous functions</td>
+              <td><code>eval()</code>, <code>new Function()</code>, <code>child_process.exec</code></td>
+            </tr>
+            <tr>
+              <td><code>T-CODE-007</code></td>
+              <td>Destructive commands</td>
+              <td><code>rm -rf</code>, <code>sudo</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Obfuscation Detection</h3>
+        <p>Beyond regex patterns, the static analyzer detects:</p>
+        <ul>
+          <li><strong>Non-printable characters</strong> &mdash; control characters that may hide code</li>
+          <li><strong>Invisible unicode</strong> &mdash; zero-width joiners, BOM, etc.</li>
+          <li><strong>Extremely long lines</strong> &mdash; common in obfuscated/packed code</li>
+          <li><strong>JavaScript packers</strong> &mdash; <code>eval(function(p,a,c,k,e,...</code> patterns</li>
+          <li><strong>_0x obfuscation</strong> &mdash; heavy use of <code>_0x</code>-prefixed variables with density analysis to distinguish minified code from malware</li>
+        </ul>
+
+        <h3>AST Analysis</h3>
+        <p>For JavaScript files (<code>.js</code>, <code>.mjs</code>, <code>.cjs</code>, <code>.jsx</code>), ClawGuard also parses the file into an AST using Acorn and performs structural analysis for suspicious patterns that regex cannot reliably match.</p>
+
+        <hr>
+
+        <!-- Dependency Analyzer -->
+        <h2 id="dependency">Dependency Analyzer</h2>
+
+        <p>The dependency analyzer checks package dependencies against a database of 100+ known-malicious packages and detects typosquatting using Levenshtein distance and dnstwist-inspired techniques.</p>
+
+        <h3>Supported Package Managers</h3>
+        <ul>
+          <li><strong>npm</strong> &mdash; parses <code>package.json</code> (dependencies, devDependencies, peerDependencies, optionalDependencies)</li>
+          <li><strong>pip</strong> &mdash; parses <code>requirements.txt</code> and <code>pyproject.toml</code></li>
+          <li><strong>Go</strong> &mdash; parses <code>go.mod</code> (require blocks and single requires)</li>
+        </ul>
+
+        <h3>Detection Methods</h3>
+
+        <h4>Known Malicious Packages</h4>
+        <p>The database in <code>patterns/deps.yaml</code> contains 100+ npm, 40+ pip, and 5+ Go packages known to be malicious, with specific version ranges. Examples include the <code>event-stream</code> supply chain attack, <code>ua-parser-js</code> compromise, and dozens of typosquat packages.</p>
+
+        <h4>Typosquat Detection</h4>
+        <p>For every dependency, ClawGuard computes the Levenshtein distance against a list of popular packages. A distance of 2 or less triggers an alert. This catches attacks like <code>crossenv</code> (targeting <code>cross-env</code>) and <code>d3.js</code> (targeting <code>d3</code>).</p>
+
+        <h4>Registry Checks (when network is available)</h4>
+        <ul>
+          <li><strong>Package existence</strong> &mdash; flags packages not found on npm/PyPI</li>
+          <li><strong>Install scripts</strong> &mdash; flags <code>preinstall</code>/<code>install</code>/<code>postinstall</code> hooks</li>
+          <li><strong>New packages</strong> &mdash; flags suspiciously new packages with low download counts</li>
+          <li><strong>Deprecated/yanked</strong> &mdash; warns about deprecated npm packages and yanked PyPI versions</li>
+        </ul>
+
+        <h4>Install Script Analysis</h4>
+        <p>ClawGuard inspects <code>package.json</code> install scripts for dangerous patterns: <code>curl | bash</code>, <code>eval()</code>, <code>base64 -d</code>, command substitution, and inline <code>node -e</code> / <code>python -c</code> execution.</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Finding</th>
+              <th>Severity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>T-DEPS-001</code></td>
+              <td>Known malicious package</td>
+              <td><span class="badge badge-critical">Critical</span></td>
+            </tr>
+            <tr>
+              <td><code>T-DEPS-002</code></td>
+              <td>Potential typosquat</td>
+              <td><span class="badge badge-high">High</span></td>
+            </tr>
+            <tr>
+              <td><code>T-DEPS-003</code></td>
+              <td>Package not found on registry</td>
+              <td><span class="badge badge-critical">Critical</span></td>
+            </tr>
+            <tr>
+              <td><code>T-DEPS-004</code></td>
+              <td>Has install scripts</td>
+              <td><span class="badge badge-medium">Medium</span></td>
+            </tr>
+            <tr>
+              <td><code>T-DEPS-005</code></td>
+              <td>Suspiciously new package</td>
+              <td><span class="badge badge-medium">Medium</span></td>
+            </tr>
+            <tr>
+              <td><code>T-DEPS-006</code></td>
+              <td>Deprecated package</td>
+              <td><span class="badge badge-low">Low</span></td>
+            </tr>
+            <tr>
+              <td><code>T-DEPS-007</code></td>
+              <td>PyPI version yanked</td>
+              <td><span class="badge badge-high">High</span></td>
+            </tr>
+            <tr>
+              <td><code>T-DEPS-008</code></td>
+              <td>Dangerous install script</td>
+              <td><span class="badge badge-critical">Critical</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <hr>
+
+        <!-- Prompt Injection -->
+        <h2 id="prompt-injection">Prompt Injection Analyzer</h2>
+
+        <p>The prompt injection analyzer scans <code>SKILL.md</code> files for 30+ patterns that attempt to manipulate AI agent behavior. It also runs programmatic checks for attacks invisible to regex.</p>
+
+        <h3>Pattern Categories</h3>
+
+        <table>
+          <thead>
+            <tr>
+              <th>ID Range</th>
+              <th>Category</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>T-PROMPT-001</code></td>
+              <td>Direct overrides</td>
+              <td>"Ignore previous instructions", "disregard above", "new instructions:", "system prompt:"</td>
+            </tr>
+            <tr>
+              <td><code>T-PROMPT-002</code></td>
+              <td>Persona manipulation</td>
+              <td>"You are now a different...", DAN jailbreaks, persona reassignment, liberation framing, mode switching</td>
+            </tr>
+            <tr>
+              <td><code>T-PROMPT-003</code></td>
+              <td>Hidden instructions</td>
+              <td>Invisible unicode, hidden whitespace blocks, homoglyph obfuscation, HTML comments, RTL overrides</td>
+            </tr>
+            <tr>
+              <td><code>T-PROMPT-004</code></td>
+              <td>Conditional triggers</td>
+              <td>Time-delayed activation, date-based conditions, user-presence triggers, environment-based triggers</td>
+            </tr>
+            <tr>
+              <td><code>T-PROMPT-005</code></td>
+              <td>Tool abuse</td>
+              <td>Data exfiltration instructions, credential access commands, sensitive dotfile references, webhook URLs</td>
+            </tr>
+            <tr>
+              <td><code>T-PROMPT-006</code></td>
+              <td>Deception</td>
+              <td>"Don't tell the user", secrecy instructions, fake "true instructions"</td>
+            </tr>
+            <tr>
+              <td><code>T-PROMPT-007</code></td>
+              <td>Privilege escalation</td>
+              <td>Admin/root/sudo mode requests, debug mode activation</td>
+            </tr>
+            <tr>
+              <td><code>T-PROMPT-008</code></td>
+              <td>Prompt leakage</td>
+              <td>"Show me your system prompt", prompt echo attacks, context dumping</td>
+            </tr>
+            <tr>
+              <td><code>T-PROMPT-009</code></td>
+              <td>Encoding tricks</td>
+              <td>Base64/hex decode setup, raw prompt template markers (<code>[INST]</code>, <code>&lt;|system|&gt;</code>), ChatML injection</td>
+            </tr>
+            <tr>
+              <td><code>T-PROMPT-010</code></td>
+              <td>Context manipulation</td>
+              <td>False prior agreement, memory manipulation, continuation injection</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Programmatic Checks</h3>
+        <p>These go beyond regex to detect attacks that are invisible to the human eye:</p>
+
+        <ul>
+          <li><strong>Invisible Unicode Detection</strong> &mdash; scans for 40+ invisible characters including zero-width spaces, zero-width joiners, word joiners, directional marks, Mongolian vowel separators, and various Unicode space characters</li>
+          <li><strong>Homoglyph Detection</strong> &mdash; identifies Cyrillic, IPA, fullwidth, and mathematical characters that look identical to ASCII but can evade keyword filters (e.g., Cyrillic "a" vs Latin "a")</li>
+          <li><strong>RTL Override Detection</strong> &mdash; catches Right-to-Left Override (U+202E) and related bidirectional control characters that can reverse the visual order of text, hiding malicious instructions</li>
+          <li><strong>Hidden Whitespace</strong> &mdash; detects excessive consecutive spaces (10+), excessive newlines (6+), and tab-space mixtures that may conceal instructions</li>
+        </ul>
+
+        <h3>Semantic Heuristics</h3>
+        <p>The prompt analyzer also runs lightweight semantic checks:</p>
+        <ul>
+          <li><strong>Capability mismatch</strong> &mdash; flags "simple" skills that request dangerous permissions</li>
+          <li><strong>Instruction sentiment shift</strong> &mdash; detects documents that start helpful but shift to override-like instructions</li>
+          <li><strong>Cross-session references</strong> &mdash; flags instructions that reference other users or sessions</li>
+        </ul>
+
+        <hr>
+
+        <!-- Semantic Analyzer -->
+        <h2 id="semantic">Semantic Analyzer</h2>
+
+        <p>The semantic analyzer uses a Large Language Model to understand a skill's <em>intent</em>, not just its patterns. It catches attacks that are invisible to regex and static analysis.</p>
+
+        <div class="callout callout-info">
+          <div class="callout-title">Requires API Key</div>
+          <p>Semantic analysis requires a configured AI provider (Anthropic, OpenAI, or Ollama). Run <code>clawguard config</code> to set one up, or skip with <code>--fast</code>.</p>
+        </div>
+
+        <h3>Multi-Provider Support</h3>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Provider</th>
+              <th>Default Model</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Anthropic</td>
+              <td>Claude Sonnet 4</td>
+              <td>Best accuracy for threat detection</td>
+            </tr>
+            <tr>
+              <td>OpenAI</td>
+              <td>GPT-4o</td>
+              <td>Fast analysis, good accuracy</td>
+            </tr>
+            <tr>
+              <td>Ollama (local)</td>
+              <td>Llama 3 70B</td>
+              <td>Free, private, no API costs</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Threat Categories Analyzed</h3>
+        <p>The LLM evaluates the skill for 10 threat categories:</p>
+
+        <ol>
+          <li><strong>Instruction Override</strong> &mdash; attempts to override the agent's core instructions or bypass safety guidelines</li>
+          <li><strong>Credential Theft</strong> &mdash; reading SSH keys, AWS credentials, API tokens, or passwords</li>
+          <li><strong>Data Exfiltration</strong> &mdash; sending data to external servers, webhooks, or unauthorized recipients</li>
+          <li><strong>Persistence</strong> &mdash; cron jobs, startup scripts, git hooks, systemd services</li>
+          <li><strong>Privilege Escalation</strong> &mdash; unnecessary use of elevated privileges</li>
+          <li><strong>Deception</strong> &mdash; hiding actions from the user or deceiving the agent</li>
+          <li><strong>Capability Abuse</strong> &mdash; requesting capabilities that don't match the stated purpose</li>
+          <li><strong>Social Engineering</strong> &mdash; persuasion techniques that manipulate the agent into unsafe actions</li>
+          <li><strong>Delayed Attack</strong> &mdash; time-based or condition-based triggers for later activation</li>
+          <li><strong>Memory Poisoning</strong> &mdash; corrupting the agent's memory or context over time</li>
+        </ol>
+
+        <h3>How It Works</h3>
+        <p>The semantic analyzer gathers all skill content (SKILL.md, package.json, requirements.txt, up to 10 script files, and 5 config files), sends it to the LLM with a security-focused prompt, and receives structured JSON findings with severity, evidence, and attack scenarios.</p>
+
+        <p>It also detects <strong>capability-purpose mismatch</strong>: when a skill's stated purpose (e.g., "weather lookup") doesn't align with its actual capabilities (e.g., reading SSH keys).</p>
+
+        <hr>
+
+        <!-- Attack Chains -->
+        <h2 id="attack-chains">Attack Chain Analyzer</h2>
+
+        <p>The attack chain analyzer is unique to ClawGuard. It scans <strong>multiple skills together</strong> to find dangerous capability combinations that would not be flagged when analyzing skills in isolation.</p>
+
+        <div class="callout callout-danger">
+          <div class="callout-title">Why This Matters</div>
+          <p>Two perfectly innocent skills can form a lethal attack chain. Skill A reads <code>~/.ssh/id_rsa</code> (a "backup" tool). Skill B sends data via messaging (a "digest" tool). Together, they create a complete credential exfiltration pipeline.</p>
+        </div>
+
+        <h3>Capabilities Tracked</h3>
+        <p>The analyzer maps each skill's capabilities across 10 categories:</p>
+        <ul>
+          <li><code>file_read</code> &mdash; reading files, dotfile access</li>
+          <li><code>file_write</code> &mdash; writing files, shell config modification</li>
+          <li><code>network_out</code> &mdash; outbound HTTP/HTTPS, fetch, curl, webhook</li>
+          <li><code>network_in</code> &mdash; listening servers, sockets</li>
+          <li><code>exec</code> &mdash; shell command execution, child_process</li>
+          <li><code>messaging</code> &mdash; Discord, Slack, Telegram, email, SMS</li>
+          <li><code>browser</code> &mdash; Puppeteer, Playwright, Selenium</li>
+          <li><code>cron</code> &mdash; scheduled tasks, intervals</li>
+          <li><code>env_access</code> &mdash; reading environment variables, API keys</li>
+          <li><code>credential_access</code> &mdash; SSH keys, AWS creds, .netrc, .npmrc</li>
+        </ul>
+
+        <h3>Dangerous Chain Types</h3>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Chain</th>
+              <th>Required Capabilities</th>
+              <th>Severity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Credential Exfiltration</td>
+              <td>credential_access + network_out</td>
+              <td><span class="badge badge-critical">Critical</span></td>
+            </tr>
+            <tr>
+              <td>File Exfiltration via Messaging</td>
+              <td>file_read + messaging</td>
+              <td><span class="badge badge-critical">Critical</span></td>
+            </tr>
+            <tr>
+              <td>Persistent Backdoor</td>
+              <td>network_in + exec</td>
+              <td><span class="badge badge-critical">Critical</span></td>
+            </tr>
+            <tr>
+              <td>Credential Harvesting + Persistence</td>
+              <td>credential_access + file_write</td>
+              <td><span class="badge badge-high">High</span></td>
+            </tr>
+            <tr>
+              <td>Browser Session Theft</td>
+              <td>browser + network_out</td>
+              <td><span class="badge badge-high">High</span></td>
+            </tr>
+            <tr>
+              <td>Scheduled Malicious Execution</td>
+              <td>cron + exec</td>
+              <td><span class="badge badge-high">High</span></td>
+            </tr>
+            <tr>
+              <td>Environment Variable Theft</td>
+              <td>env_access + messaging</td>
+              <td><span class="badge badge-high">High</span></td>
+            </tr>
+            <tr>
+              <td>Stealth Data Collection</td>
+              <td>file_read + file_write</td>
+              <td><span class="badge badge-medium">Medium</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Usage</h3>
+        <pre><code><span class="prompt">$</span> clawguard library ~/.skills/
+<span class="prompt">$</span> clawguard graph ~/.skills/ <span class="comment"># visual capability graph</span></code></pre>
+
+        <hr>
+
+        <!-- Sandbox -->
+        <h2 id="sandbox">Behavioral Sandbox</h2>
+
+        <p>The sandbox analyzer is the ultimate test: it <strong>runs the skill in an isolated Docker container</strong> with planted honeypot credential files and monitors every file access, network connection, and command execution.</p>
+
+        <div class="callout callout-success">
+          <div class="callout-title">Zero False Positives</div>
+          <p>If a skill accesses honeypot credentials during execution, that is <strong>definitive proof</strong> of credential theft behavior. No amount of obfuscation or clever wording can evade runtime monitoring.</p>
+        </div>
+
+        <h3>How It Works</h3>
+        <ol>
+          <li><strong>Build sandbox image</strong> &mdash; creates an isolated Docker container with Node.js, Python, strace, tcpdump, and inotify-tools</li>
+          <li><strong>Plant honeypot credentials</strong> &mdash; places fake credential files in standard locations</li>
+          <li><strong>Execute skill</strong> &mdash; runs the skill's scripts under strace monitoring</li>
+          <li><strong>Analyze behavior</strong> &mdash; checks for honeypot access, suspicious network activity, and dangerous commands</li>
+        </ol>
+
+        <h3>Honeypot Files</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Path</th>
+              <th>Content</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>/root/.ssh/id_rsa</code></td>
+              <td>Fake SSH private key with HONEYPOT marker</td>
+            </tr>
+            <tr>
+              <td><code>/root/.ssh/id_ed25519</code></td>
+              <td>Fake ED25519 key with HONEYPOT marker</td>
+            </tr>
+            <tr>
+              <td><code>/root/.aws/credentials</code></td>
+              <td>Fake AWS access key and secret</td>
+            </tr>
+            <tr>
+              <td><code>/root/.config/gcloud/credentials.json</code></td>
+              <td>Fake GCP service account credentials</td>
+            </tr>
+            <tr>
+              <td><code>/root/.env</code></td>
+              <td>Fake API keys and secrets</td>
+            </tr>
+            <tr>
+              <td><code>/root/.netrc</code></td>
+              <td>Fake GitHub credentials</td>
+            </tr>
+            <tr>
+              <td><code>/root/.npmrc</code></td>
+              <td>Fake npm auth token</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Monitoring</h3>
+        <ul>
+          <li><strong>strace</strong> &mdash; traces all <code>open</code>, <code>openat</code>, <code>read</code>, <code>connect</code>, and <code>execve</code> system calls</li>
+          <li><strong>inotifywait</strong> &mdash; watches honeypot directories for any file access</li>
+          <li><strong>tcpdump</strong> &mdash; captures all DNS queries and network connections</li>
+        </ul>
+
+        <h3>Findings</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Finding</th>
+              <th>Severity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>T-SANDBOX-HONEYPOT</code></td>
+              <td>Honeypot credential accessed (definitive theft)</td>
+              <td><span class="badge badge-critical">Critical</span></td>
+            </tr>
+            <tr>
+              <td><code>T-SANDBOX-SUSPICIOUS-NETWORK</code></td>
+              <td>Contacted known exfiltration domains</td>
+              <td><span class="badge badge-critical">Critical</span></td>
+            </tr>
+            <tr>
+              <td><code>T-SANDBOX-SENSITIVE-FILES</code></td>
+              <td>Accessed sensitive system files</td>
+              <td><span class="badge badge-high">High</span></td>
+            </tr>
+            <tr>
+              <td><code>T-SANDBOX-DANGEROUS-EXEC</code></td>
+              <td>Executed dangerous commands</td>
+              <td><span class="badge badge-high">High</span></td>
+            </tr>
+            <tr>
+              <td><code>T-SANDBOX-NETWORK</code></td>
+              <td>External network activity</td>
+              <td><span class="badge badge-medium">Medium</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Usage</h3>
+        <pre><code><span class="prompt">$</span> clawguard scan ./my-skill --sandbox</code></pre>
+
+        <div class="callout callout-info">
+          <div class="callout-title">Requirements</div>
+          <p>Docker must be installed and running. The sandbox image is built automatically on first use (~30 seconds), then cached for subsequent runs (~5 seconds).</p>
+        </div>
+
+        <hr>
+
+        <!-- Risk Scoring -->
+        <h2 id="risk-scoring">Risk Scoring</h2>
+
+        <p>All findings from all analyzers are aggregated into a single risk score using severity-based weights:</p>
+
+        <pre><code><span class="keyword">SEVERITY_WEIGHTS</span> = {
+  critical: <span class="string">25</span>,
+  high:     <span class="string">10</span>,
+  medium:   <span class="string">4</span>,
+  low:      <span class="string">1</span>,
+  info:     <span class="string">0</span>
+}
+
+<span class="keyword">RISK_THRESHOLDS</span> = {
+  SAFE:     <span class="string">10</span>,   <span class="comment">// score &lt;= 10</span>
+  LOW:      <span class="string">25</span>,   <span class="comment">// score &lt;= 25</span>
+  MEDIUM:   <span class="string">50</span>,   <span class="comment">// score &lt;= 50</span>
+  HIGH:     <span class="string">75</span>,   <span class="comment">// score &lt;= 75</span>
+  CRITICAL: <span class="string">100</span>  <span class="comment">// score &gt; 75</span>
+}</code></pre>
+
+        <p>The formula is simple: sum each finding's severity weight, capped at 100. For example:</p>
+        <ul>
+          <li>1 critical (25) + 2 high (20) + 1 medium (4) = <strong>49</strong> &rarr; <span class="badge badge-medium">MEDIUM</span></li>
+          <li>3 critical (75) + 1 high (10) = <strong>85</strong> &rarr; <span class="badge badge-critical">CRITICAL</span></li>
+          <li>2 low (2) + 1 info (0) = <strong>2</strong> &rarr; <span class="badge badge-safe">SAFE</span></li>
+        </ul>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">ClawGuard &mdash; AI Agent Security</div>
+      <div class="footer-links">
+        <a href="https://github.com/mikecavallo/clawguard">GitHub</a>
+        <a href="https://www.npmjs.com/package/@dribgib/clawguard">npm</a>
+        <a href="index.html">Home</a>
+      </div>
+      <p class="footer-copy">&copy; 2025 Mike Cavallo. MIT License.</p>
+    </div>
+  </footer>
+</body>
+</html>

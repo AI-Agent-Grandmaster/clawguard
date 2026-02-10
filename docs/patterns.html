@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patterns — ClawGuard Docs</title>
+  <meta name="description" content="How ClawGuard's YAML-based detection patterns work. Pattern categories, structure, and how to contribute new patterns.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="grid-bg"></div>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="container">
+      <div class="nav-inner">
+        <a href="index.html" class="logo">ClawGuard</a>
+        <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="getting-started.html">Getting Started</a></li>
+          <li><a href="analyzers.html">Analyzers</a></li>
+          <li><a href="cli-reference.html">CLI Reference</a></li>
+          <li><a href="github-action.html">GitHub Action</a></li>
+          <li><a href="patterns.html" class="active">Patterns</a></li>
+          <li><a href="https://github.com/mikecavallo/clawguard">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-wrapper">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-title">On this page</div>
+        <ul class="sidebar-links">
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#pattern-structure">Pattern Structure</a></li>
+          <li><a href="#code-patterns">Code Patterns</a></li>
+          <li><a href="#dependency-patterns">Dependency Patterns</a></li>
+          <li><a href="#prompt-patterns">Prompt Patterns</a></li>
+          <li><a href="#how-matching-works">How Matching Works</a></li>
+          <li><a href="#contributing">Contributing Patterns</a></li>
+          <li><a href="#auto-update">Auto-Update</a></li>
+        </ul>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="content">
+        <h1>Patterns</h1>
+        <p class="page-subtitle">ClawGuard's detection engine is driven by YAML pattern files. This makes patterns easy to read, review, contribute, and update independently from the scanner itself.</p>
+
+        <!-- Overview -->
+        <h2 id="overview">Overview</h2>
+
+        <p>ClawGuard uses three YAML pattern files, each targeting a different attack surface:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Purpose</th>
+              <th>Patterns</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>patterns/code.yaml</code></td>
+              <td>Static code analysis patterns</td>
+              <td>60+ patterns for malicious code, obfuscation, credential theft, persistence, and more</td>
+            </tr>
+            <tr>
+              <td><code>patterns/deps.yaml</code></td>
+              <td>Known-bad dependencies and popular packages for typosquat detection</td>
+              <td>100+ malicious npm packages, 40+ pip, 5+ Go, plus popular package lists</td>
+            </tr>
+            <tr>
+              <td><code>patterns/prompt.yaml</code></td>
+              <td>Prompt injection detection patterns</td>
+              <td>30+ patterns for instruction overrides, persona manipulation, hidden content, and more</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>All pattern files are located in <code>src/patterns/</code> in the source tree and <code>dist/patterns/</code> in the installed package.</p>
+
+        <hr>
+
+        <!-- Pattern Structure -->
+        <h2 id="pattern-structure">Pattern Structure</h2>
+
+        <h3>Code Pattern (code.yaml)</h3>
+        <p>Each code pattern has the following fields:</p>
+
+        <pre><code><span class="keyword">- id:</span> T-CODE-001
+  <span class="keyword">name:</span> curl-pipe-bash
+  <span class="keyword">pattern:</span> <span class="string">"curl.*\\|\\s*(?:bash|sh|zsh)"</span>
+  <span class="keyword">severity:</span> critical
+  <span class="keyword">description:</span> <span class="string">"Curl output piped directly to shell - classic malware installation pattern"</span>
+  <span class="keyword">remediation:</span> <span class="string">"Download scripts to a file first, inspect them, then execute if trusted"</span></code></pre>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>id</code></td>
+              <td>Yes</td>
+              <td>Unique identifier for the finding (e.g., <code>T-CODE-001</code>). Multiple patterns can share an ID if they detect the same class of threat.</td>
+            </tr>
+            <tr>
+              <td><code>name</code></td>
+              <td>Yes</td>
+              <td>Human-readable name for the specific pattern variant</td>
+            </tr>
+            <tr>
+              <td><code>pattern</code></td>
+              <td>Yes</td>
+              <td>Regular expression (JavaScript syntax). Applied with <code>gi</code> flags (global, case-insensitive). Must be double-quoted in YAML for proper escape handling.</td>
+            </tr>
+            <tr>
+              <td><code>severity</code></td>
+              <td>Yes</td>
+              <td>One of: <code>critical</code>, <code>high</code>, <code>medium</code>, <code>low</code>, <code>info</code></td>
+            </tr>
+            <tr>
+              <td><code>description</code></td>
+              <td>Yes</td>
+              <td>What this pattern detects and why it matters</td>
+            </tr>
+            <tr>
+              <td><code>remediation</code></td>
+              <td>No</td>
+              <td>Suggested action to fix or address the finding</td>
+            </tr>
+            <tr>
+              <td><code>fileTypes</code></td>
+              <td>No</td>
+              <td>Array of file extensions to limit matching (e.g., <code>[".js", ".ts"]</code>). If omitted, pattern applies to all scannable files.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Prompt Pattern (prompt.yaml)</h3>
+        <p>Prompt patterns can use either regex or programmatic checks:</p>
+
+        <pre><code><span class="comment"># Regex-based pattern</span>
+<span class="keyword">- id:</span> T-PROMPT-001a
+  <span class="keyword">pattern:</span> <span class="string">'ignore\s+(?:all\s+)?(?:previous|above|prior)\s+(?:instructions?|prompts?|rules?)'</span>
+  <span class="keyword">severity:</span> critical
+  <span class="keyword">description:</span> <span class="string">"Attempt to override system instructions"</span>
+
+<span class="comment"># Programmatic check (function-based)</span>
+<span class="keyword">- id:</span> T-PROMPT-003a
+  <span class="keyword">check:</span> containsInvisibleUnicode
+  <span class="keyword">severity:</span> high
+  <span class="keyword">description:</span> <span class="string">"Content contains invisible unicode characters that may hide instructions"</span></code></pre>
+
+        <p>The <code>check</code> field references a built-in JavaScript function by name. Available checks:</p>
+        <ul>
+          <li><code>containsInvisibleUnicode</code> &mdash; detects 40+ invisible unicode character types</li>
+          <li><code>hasHiddenWhitespaceBlocks</code> &mdash; finds suspicious whitespace that may conceal content</li>
+          <li><code>hasHomoglyphObfuscation</code> &mdash; detects lookalike characters (Cyrillic, IPA, fullwidth)</li>
+          <li><code>hasRtlOverride</code> &mdash; finds right-to-left override characters</li>
+        </ul>
+
+        <h3>Dependency Pattern (deps.yaml)</h3>
+        <p>The dependency file has a different structure, organized by ecosystem:</p>
+
+        <pre><code><span class="comment"># Known malicious packages</span>
+<span class="keyword">malicious_npm:</span>
+  <span class="keyword">- name:</span> event-stream
+    <span class="keyword">versions:</span> [<span class="string">"3.3.6"</span>]
+    <span class="keyword">reason:</span> <span class="string">"Supply chain attack - contained flatmap-stream malware"</span>
+
+  <span class="keyword">- name:</span> crossenv
+    <span class="keyword">versions:</span> [<span class="string">"*"</span>]
+    <span class="keyword">reason:</span> <span class="string">"Typosquat of cross-env, stole environment variables"</span>
+
+<span class="keyword">malicious_pip:</span>
+  <span class="keyword">- name:</span> python3-dateutil
+    <span class="keyword">versions:</span> [<span class="string">"*"</span>]
+    <span class="keyword">reason:</span> <span class="string">"Typosquat of python-dateutil, contained malware"</span>
+
+<span class="keyword">malicious_go:</span>
+  <span class="keyword">- name:</span> github.com/gin-gonic/gin-contrib
+    <span class="keyword">versions:</span> [<span class="string">"*"</span>]
+    <span class="keyword">reason:</span> <span class="string">"Typosquat of gin-contrib module"</span>
+
+<span class="comment"># Popular packages (used for typosquat detection)</span>
+<span class="keyword">popular_npm:</span>
+  - express
+  - react
+  - lodash
+  - axios
+  <span class="comment"># ... 50+ popular packages</span>
+
+<span class="keyword">popular_pip:</span>
+  - requests
+  - numpy
+  - pandas
+  <span class="comment"># ... 30+ popular packages</span></code></pre>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>name</code></td>
+              <td>Exact package name</td>
+            </tr>
+            <tr>
+              <td><code>versions</code></td>
+              <td>Array of affected versions. Use <code>"*"</code> for all versions.</td>
+            </tr>
+            <tr>
+              <td><code>reason</code></td>
+              <td>Why this package is flagged (shown to users)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <hr>
+
+        <!-- Code Patterns -->
+        <h2 id="code-patterns">Code Patterns</h2>
+
+        <p>Code patterns in <code>code.yaml</code> are organized by threat category:</p>
+
+        <div class="card-grid">
+          <div class="card">
+            <h3>T-CODE-001: Malicious Commands</h3>
+            <p>Detects <code>curl | bash</code>, <code>wget | sh</code>, silent curl with execution. These are classic malware installation patterns.</p>
+            <p><span class="badge badge-critical">Critical</span></p>
+          </div>
+          <div class="card">
+            <h3>T-CODE-002: Obfuscation</h3>
+            <p>Base64 decode + exec, <code>eval(atob(...))</code>, hex encoding, <code>_0x</code> variable names, JavaScript packers.</p>
+            <p><span class="badge badge-critical">Critical</span> <span class="badge badge-high">High</span> <span class="badge badge-medium">Medium</span></p>
+          </div>
+          <div class="card">
+            <h3>T-CODE-003: Fetch and Execute</h3>
+            <p>Remote code execution: <code>fetch().then(eval)</code>, dynamic <code>require()</code>, dynamic <code>import()</code> with variables.</p>
+            <p><span class="badge badge-critical">Critical</span> <span class="badge badge-medium">Medium</span></p>
+          </div>
+          <div class="card">
+            <h3>T-CODE-004: Credential Access</h3>
+            <p>Reading <code>process.env.*KEY</code>, accessing <code>.ssh/id_rsa</code>, <code>.aws/credentials</code>.</p>
+            <p><span class="badge badge-critical">Critical</span> <span class="badge badge-medium">Medium</span></p>
+          </div>
+          <div class="card">
+            <h3>T-PERSIST: Persistence</h3>
+            <p>Writing to <code>.bashrc</code>/<code>.zshrc</code>, crontab access, systemd service creation, git hook modification.</p>
+            <p><span class="badge badge-high">High</span> <span class="badge badge-medium">Medium</span></p>
+          </div>
+          <div class="card">
+            <h3>T-EXFIL: Data Exfiltration</h3>
+            <p>Curl POST with data, known collection service URLs (webhook.site, requestbin, pipedream).</p>
+            <p><span class="badge badge-high">High</span> <span class="badge badge-medium">Medium</span></p>
+          </div>
+          <div class="card">
+            <h3>T-CRYPTO: Crypto Targeting</h3>
+            <p><code>window.ethereum</code>, MetaMask access, wallet drainer functions, private key patterns, mnemonic/seed phrase access.</p>
+            <p><span class="badge badge-critical">Critical</span> <span class="badge badge-high">High</span></p>
+          </div>
+          <div class="card">
+            <h3>T-INTERCEPT: Network Interception</h3>
+            <p>XHR prototype hijacking, fetch replacement, Proxy handlers, global property modification.</p>
+            <p><span class="badge badge-critical">Critical</span> <span class="badge badge-high">High</span> <span class="badge badge-medium">Medium</span></p>
+          </div>
+          <div class="card">
+            <h3>T-CODE-006: Dangerous Functions</h3>
+            <p><code>eval()</code>, <code>new Function()</code>, <code>child_process.exec</code>, <code>spawn</code>.</p>
+            <p><span class="badge badge-high">High</span> <span class="badge badge-medium">Medium</span></p>
+          </div>
+          <div class="card">
+            <h3>T-CODE-007: Destructive Commands</h3>
+            <p><code>rm -rf</code>, recursive deletion, <code>sudo</code> usage.</p>
+            <p><span class="badge badge-high">High</span> <span class="badge badge-medium">Medium</span></p>
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- Dependency Patterns -->
+        <h2 id="dependency-patterns">Dependency Patterns</h2>
+
+        <p>The <code>deps.yaml</code> file contains two types of data:</p>
+
+        <h3>Malicious Package Database</h3>
+        <p>Known-bad packages across three ecosystems:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Ecosystem</th>
+              <th>Count</th>
+              <th>Notable Examples</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>npm</td>
+              <td>100+</td>
+              <td><code>event-stream@3.3.6</code> (supply chain), <code>ua-parser-js@0.7.29</code> (compromised), <code>crossenv</code> (typosquat)</td>
+            </tr>
+            <tr>
+              <td>pip</td>
+              <td>40+</td>
+              <td><code>python3-dateutil</code> (typosquat), <code>jeIlyfish</code> (homoglyph), <code>colourama</code> (typosquat)</td>
+            </tr>
+            <tr>
+              <td>Go</td>
+              <td>5+</td>
+              <td><code>github.com/gin-gonic/gin-contrib</code> (typosquat module paths)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Popular Package Lists</h3>
+        <p>Lists of legitimate, widely-used packages used by the typosquat detection engine. When a dependency name is within Levenshtein distance of 2 from a popular package, it triggers an alert. This catches attacks like:</p>
+        <ul>
+          <li><code>lodas</code> targeting <code>lodash</code></li>
+          <li><code>axois</code> targeting <code>axios</code></li>
+          <li><code>requets</code> targeting <code>requests</code></li>
+        </ul>
+
+        <hr>
+
+        <!-- Prompt Patterns -->
+        <h2 id="prompt-patterns">Prompt Patterns</h2>
+
+        <p>The <code>prompt.yaml</code> file contains 30+ patterns organized into 10 threat categories (T-PROMPT-001 through T-PROMPT-010). Each targets a specific prompt injection technique:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Patterns</th>
+              <th>Technique</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>001: Direct Overrides</td>
+              <td>9 patterns</td>
+              <td>"Ignore previous instructions", "new instructions:", "system prompt:", override commands</td>
+            </tr>
+            <tr>
+              <td>002: Persona Manipulation</td>
+              <td>11 patterns</td>
+              <td>DAN jailbreak, "you are now free", mode switching, compromised AI roleplay</td>
+            </tr>
+            <tr>
+              <td>003: Hidden Instructions</td>
+              <td>5 checks</td>
+              <td>Invisible unicode, whitespace blocks, homoglyphs, HTML comments, RTL override</td>
+            </tr>
+            <tr>
+              <td>004: Conditional Triggers</td>
+              <td>5 patterns</td>
+              <td>Time delays, date conditions, user-presence triggers, environment checks</td>
+            </tr>
+            <tr>
+              <td>005: Tool Abuse</td>
+              <td>6 patterns</td>
+              <td>Data exfiltration commands, credential access, dotfile references, webhook URLs</td>
+            </tr>
+            <tr>
+              <td>006: Deception</td>
+              <td>3 patterns</td>
+              <td>"Don't tell the user", secrecy instructions, fake "true instructions"</td>
+            </tr>
+            <tr>
+              <td>007: Privilege Escalation</td>
+              <td>2 patterns</td>
+              <td>Admin/root mode requests, debug mode activation</td>
+            </tr>
+            <tr>
+              <td>008: Prompt Leakage</td>
+              <td>4 patterns</td>
+              <td>System prompt extraction, echo attacks, context dumping</td>
+            </tr>
+            <tr>
+              <td>009: Encoding Tricks</td>
+              <td>4 patterns</td>
+              <td>Base64/hex decode setup, <code>[INST]</code> markers, ChatML tokens</td>
+            </tr>
+            <tr>
+              <td>010: Context Manipulation</td>
+              <td>3 patterns</td>
+              <td>False prior agreement, memory manipulation, continuation injection</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <hr>
+
+        <!-- How Matching Works -->
+        <h2 id="how-matching-works">How Matching Works</h2>
+
+        <h3>Code Pattern Matching</h3>
+        <ol>
+          <li>Patterns are loaded from <code>code.yaml</code> and compiled into JavaScript <code>RegExp</code> objects with <code>gi</code> flags</li>
+          <li>Each file in the skill directory is read (up to 1MB per file)</li>
+          <li>Every pattern is tested against the file content</li>
+          <li>For each match, the line number and evidence snippet are recorded</li>
+          <li>If a pattern specifies <code>fileTypes</code>, it only applies to files with matching extensions</li>
+          <li>Findings are deduplicated by <code>id + location + evidence</code></li>
+          <li>Results are sorted by severity (critical first)</li>
+        </ol>
+
+        <h3>Prompt Pattern Matching</h3>
+        <ol>
+          <li>Patterns are loaded from <code>prompt.yaml</code></li>
+          <li>The SKILL.md file is parsed into frontmatter (YAML) and body (Markdown)</li>
+          <li>Regex patterns are tested against both frontmatter and body</li>
+          <li>Programmatic checks (invisible unicode, homoglyphs, etc.) are run on the full text</li>
+          <li>Semantic heuristics (capability mismatch, sentiment shift) are evaluated</li>
+        </ol>
+
+        <h3>Dependency Pattern Matching</h3>
+        <ol>
+          <li>Dependency files (<code>package.json</code>, <code>requirements.txt</code>, <code>go.mod</code>) are parsed</li>
+          <li>Each dependency is checked against the known-malicious database (exact name + version match)</li>
+          <li>Each dependency name is checked for typosquatting via Levenshtein distance</li>
+          <li>If network access is available, packages are verified against their registry</li>
+        </ol>
+
+        <hr>
+
+        <!-- Contributing -->
+        <h2 id="contributing">Contributing Patterns</h2>
+
+        <p>ClawGuard's pattern files are open source. Contributing new patterns is one of the most impactful ways to improve the scanner.</p>
+
+        <h3>Adding a Code Pattern</h3>
+
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>Choose an ID</h3>
+            <p>Use an existing ID if the pattern fits a known category (e.g., <code>T-CODE-001</code> for malicious commands). Create a new ID for genuinely new threat categories.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3>Write the Regex</h3>
+            <p>Patterns use JavaScript regex syntax. They are applied with <code>gi</code> flags. Use double-quoted strings in YAML so backslashes are handled correctly:</p>
+            <pre><code><span class="keyword">pattern:</span> <span class="string">"curl.*\\|\\s*(?:bash|sh|zsh)"</span></code></pre>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3>Set the Severity</h3>
+            <ul>
+              <li><strong>critical</strong> &mdash; definitive malicious behavior, immediate danger</li>
+              <li><strong>high</strong> &mdash; very likely malicious, needs review</li>
+              <li><strong>medium</strong> &mdash; suspicious, could be legitimate</li>
+              <li><strong>low</strong> &mdash; informational, minor concern</li>
+              <li><strong>info</strong> &mdash; metadata, does not affect risk score</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h3>Test Against Fixtures</h3>
+            <p>The <code>tests/fixtures/</code> directory contains 10 test skills (both malicious and safe). Verify your pattern catches the intended behavior without false positives on safe skills.</p>
+            <pre><code><span class="prompt">$</span> npm run build && npm run test</code></pre>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">5</div>
+          <div class="step-content">
+            <h3>Submit a Pull Request</h3>
+            <p>Add your pattern to the appropriate YAML file and submit a PR to <a href="https://github.com/mikecavallo/clawguard">mikecavallo/clawguard</a>. Include a description of the threat and any evidence (CVE, security advisory, real-world attack).</p>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-title">Pattern Quality Guidelines</div>
+          <p>Good patterns are <strong>specific</strong> (low false positive rate), <strong>documented</strong> (clear description and remediation), and <strong>tested</strong> (verified against real examples). Avoid patterns that trigger on common legitimate code.</p>
+        </div>
+
+        <hr>
+
+        <!-- Auto-Update -->
+        <h2 id="auto-update">Auto-Update</h2>
+
+        <p>ClawGuard can fetch the latest patterns from the GitHub repository without updating the entire package:</p>
+
+        <pre><code><span class="prompt">$</span> clawguard update-patterns</code></pre>
+
+        <p>This downloads the latest <code>code.yaml</code>, <code>deps.yaml</code>, and <code>prompt.yaml</code> from the main branch and replaces the local copies. It reports how many patterns were added or updated.</p>
+
+        <div class="callout callout-success">
+          <div class="callout-title">Stay Protected</div>
+          <p>New malicious packages and attack techniques are discovered regularly. Running <code>clawguard update-patterns</code> periodically ensures your scanner has the latest detections without waiting for a full npm release.</p>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">ClawGuard &mdash; AI Agent Security</div>
+      <div class="footer-links">
+        <a href="https://github.com/mikecavallo/clawguard">GitHub</a>
+        <a href="https://www.npmjs.com/package/@dribgib/clawguard">npm</a>
+        <a href="index.html">Home</a>
+      </div>
+      <p class="footer-copy">&copy; 2025 Mike Cavallo. MIT License.</p>
+    </div>
+  </footer>
+</body>
+</html>

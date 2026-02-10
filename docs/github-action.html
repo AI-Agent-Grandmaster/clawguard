@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub Action — ClawGuard Docs</title>
+  <meta name="description" content="Integrate ClawGuard into your GitHub Actions CI/CD pipeline. Automated security scanning for AI agent skills.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="grid-bg"></div>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="container">
+      <div class="nav-inner">
+        <a href="index.html" class="logo">ClawGuard</a>
+        <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="getting-started.html">Getting Started</a></li>
+          <li><a href="analyzers.html">Analyzers</a></li>
+          <li><a href="cli-reference.html">CLI Reference</a></li>
+          <li><a href="github-action.html" class="active">GitHub Action</a></li>
+          <li><a href="patterns.html">Patterns</a></li>
+          <li><a href="https://github.com/mikecavallo/clawguard">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-wrapper">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-title">On this page</div>
+        <ul class="sidebar-links">
+          <li><a href="#quick-start">Quick Start</a></li>
+          <li><a href="#inputs">Inputs</a></li>
+          <li><a href="#outputs">Outputs</a></li>
+          <li><a href="#basic-workflow">Basic Workflow</a></li>
+          <li><a href="#semantic-analysis">With Semantic Analysis</a></li>
+          <li><a href="#using-outputs">Using Outputs</a></li>
+          <li><a href="#pr-comments">PR Comment Integration</a></li>
+          <li><a href="#threshold-config">Threshold Configuration</a></li>
+          <li><a href="#full-example">Full Example</a></li>
+        </ul>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="content">
+        <h1>GitHub Action</h1>
+        <p class="page-subtitle">Automate ClawGuard security scanning in your CI/CD pipeline. Block dangerous skills before they reach production.</p>
+
+        <!-- Quick Start -->
+        <h2 id="quick-start">Quick Start</h2>
+
+        <p>Add ClawGuard to any GitHub Actions workflow in one step:</p>
+
+        <pre><code><span class="label">yaml</span><span class="keyword">- name:</span> Security Scan
+  <span class="keyword">uses:</span> mikecavallo/clawguard@v1
+  <span class="keyword">with:</span>
+    <span class="keyword">path:</span> <span class="string">'.'</span></code></pre>
+
+        <p>This scans the repository root using static analysis and fails the workflow if <code>HIGH</code> or <code>CRITICAL</code> risk is detected.</p>
+
+        <hr>
+
+        <!-- Inputs -->
+        <h2 id="inputs">Inputs</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Input</th>
+              <th>Required</th>
+              <th>Default</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>path</code></td>
+              <td>Yes</td>
+              <td><code>.</code></td>
+              <td>Path to the skill directory to scan</td>
+            </tr>
+            <tr>
+              <td><code>severity-threshold</code></td>
+              <td>No</td>
+              <td><code>high</code></td>
+              <td>Minimum severity to fail the action: <code>critical</code>, <code>high</code>, <code>medium</code>, <code>low</code></td>
+            </tr>
+            <tr>
+              <td><code>output-format</code></td>
+              <td>No</td>
+              <td><code>md</code></td>
+              <td>Output format: <code>md</code> (human-readable) or <code>json</code> (machine-readable)</td>
+            </tr>
+            <tr>
+              <td><code>semantic</code></td>
+              <td>No</td>
+              <td><code>false</code></td>
+              <td>Enable LLM-powered semantic analysis (requires <code>api-key</code>)</td>
+            </tr>
+            <tr>
+              <td><code>api-key</code></td>
+              <td>No</td>
+              <td>&mdash;</td>
+              <td>API key for semantic analysis. <strong>Always use GitHub Secrets!</strong></td>
+            </tr>
+            <tr>
+              <td><code>node-version</code></td>
+              <td>No</td>
+              <td><code>20</code></td>
+              <td>Node.js version to use for running ClawGuard</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <hr>
+
+        <!-- Outputs -->
+        <h2 id="outputs">Outputs</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Output</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>risk-level</code></td>
+              <td>string</td>
+              <td>Risk level: <code>SAFE</code>, <code>LOW</code>, <code>MEDIUM</code>, <code>HIGH</code>, or <code>CRITICAL</code></td>
+            </tr>
+            <tr>
+              <td><code>risk-score</code></td>
+              <td>number</td>
+              <td>Numeric risk score from 0 to 100</td>
+            </tr>
+            <tr>
+              <td><code>findings-count</code></td>
+              <td>number</td>
+              <td>Total number of security findings</td>
+            </tr>
+            <tr>
+              <td><code>report</code></td>
+              <td>string</td>
+              <td>Full JSON scan report (truncated to 50KB for GitHub output limits)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <hr>
+
+        <!-- Basic Workflow -->
+        <h2 id="basic-workflow">Basic Workflow</h2>
+
+        <p>A minimal workflow that scans on every push and pull request:</p>
+
+        <pre><code><span class="label">yaml</span><span class="keyword">name:</span> ClawGuard Security Scan
+<span class="keyword">on:</span> [push, pull_request]
+
+<span class="keyword">jobs:</span>
+  <span class="keyword">security-scan:</span>
+    <span class="keyword">runs-on:</span> ubuntu-latest
+    <span class="keyword">steps:</span>
+      <span class="keyword">- name:</span> Checkout
+        <span class="keyword">uses:</span> actions/checkout@v4
+
+      <span class="keyword">- name:</span> ClawGuard Scan
+        <span class="keyword">uses:</span> mikecavallo/clawguard@v1
+        <span class="keyword">with:</span>
+          <span class="keyword">path:</span> <span class="string">'.'</span>
+          <span class="keyword">severity-threshold:</span> <span class="string">'high'</span></code></pre>
+
+        <p>This workflow will:</p>
+        <ol>
+          <li>Check out your code</li>
+          <li>Install ClawGuard via npm</li>
+          <li>Run static analysis, dependency scanning, and prompt injection detection</li>
+          <li>Fail the workflow if risk level is <code>HIGH</code> or above</li>
+        </ol>
+
+        <hr>
+
+        <!-- Semantic Analysis -->
+        <h2 id="semantic-analysis">With Semantic Analysis</h2>
+
+        <p>To enable LLM-powered semantic analysis, pass your API key via GitHub Secrets:</p>
+
+        <pre><code><span class="label">yaml</span><span class="keyword">- name:</span> ClawGuard Full Scan
+  <span class="keyword">uses:</span> mikecavallo/clawguard@v1
+  <span class="keyword">with:</span>
+    <span class="keyword">path:</span> <span class="string">'./skills'</span>
+    <span class="keyword">semantic:</span> <span class="string">'true'</span>
+    <span class="keyword">api-key:</span> ${{ secrets.CLAWGUARD_API_KEY }}</code></pre>
+
+        <div class="callout callout-warning">
+          <div class="callout-title">Security: Use Secrets</div>
+          <p>Never hardcode API keys in workflow files. Always use <code>${{ secrets.YOUR_SECRET }}</code> to reference keys stored in GitHub repository or organization secrets.</p>
+        </div>
+
+        <hr>
+
+        <!-- Using Outputs -->
+        <h2 id="using-outputs">Using Outputs in Subsequent Steps</h2>
+
+        <p>Access scan results in later steps using the step's output variables:</p>
+
+        <pre><code><span class="label">yaml</span><span class="keyword">jobs:</span>
+  <span class="keyword">security:</span>
+    <span class="keyword">runs-on:</span> ubuntu-latest
+    <span class="keyword">steps:</span>
+      <span class="keyword">- name:</span> Checkout
+        <span class="keyword">uses:</span> actions/checkout@v4
+
+      <span class="keyword">- name:</span> ClawGuard Scan
+        <span class="keyword">id:</span> scan
+        <span class="keyword">uses:</span> mikecavallo/clawguard@v1
+        <span class="keyword">with:</span>
+          <span class="keyword">path:</span> <span class="string">'.'</span>
+          <span class="keyword">severity-threshold:</span> <span class="string">'critical'</span> <span class="comment"># only fail on critical</span>
+
+      <span class="keyword">- name:</span> Display Results
+        <span class="keyword">if:</span> always()
+        <span class="keyword">run:</span> |
+          echo "Risk Level: ${{ steps.scan.outputs.risk-level }}"
+          echo "Risk Score: ${{ steps.scan.outputs.risk-score }}"
+          echo "Findings:   ${{ steps.scan.outputs.findings-count }}"
+
+      <span class="keyword">- name:</span> Block on High Risk
+        <span class="keyword">if:</span> steps.scan.outputs.risk-level == 'HIGH' || steps.scan.outputs.risk-level == 'CRITICAL'
+        <span class="keyword">run:</span> |
+          echo "::warning::ClawGuard detected ${{ steps.scan.outputs.risk-level }} risk"
+          echo "Review the scan report before merging."</code></pre>
+
+        <hr>
+
+        <!-- PR Comments -->
+        <h2 id="pr-comments">PR Comment Integration</h2>
+
+        <p>Post scan results as a comment on pull requests for easy review:</p>
+
+        <pre><code><span class="label">yaml</span><span class="keyword">name:</span> ClawGuard PR Review
+<span class="keyword">on:</span>
+  <span class="keyword">pull_request:</span>
+    <span class="keyword">types:</span> [opened, synchronize]
+
+<span class="keyword">permissions:</span>
+  <span class="keyword">pull-requests:</span> write
+
+<span class="keyword">jobs:</span>
+  <span class="keyword">scan:</span>
+    <span class="keyword">runs-on:</span> ubuntu-latest
+    <span class="keyword">steps:</span>
+      <span class="keyword">- name:</span> Checkout
+        <span class="keyword">uses:</span> actions/checkout@v4
+
+      <span class="keyword">- name:</span> ClawGuard Scan
+        <span class="keyword">id:</span> scan
+        <span class="keyword">uses:</span> mikecavallo/clawguard@v1
+        <span class="keyword">with:</span>
+          <span class="keyword">path:</span> <span class="string">'.'</span>
+          <span class="keyword">output-format:</span> <span class="string">'json'</span>
+          <span class="keyword">severity-threshold:</span> <span class="string">'critical'</span>
+
+      <span class="keyword">- name:</span> Comment on PR
+        <span class="keyword">if:</span> always() && github.event_name == 'pull_request'
+        <span class="keyword">uses:</span> actions/github-script@v7
+        <span class="keyword">with:</span>
+          <span class="keyword">script:</span> |
+            const riskLevel = '${{ steps.scan.outputs.risk-level }}';
+            const riskScore = '${{ steps.scan.outputs.risk-score }}';
+            const findings  = '${{ steps.scan.outputs.findings-count }}';
+
+            const emoji = {
+              SAFE: ':white_check_mark:',
+              LOW: ':large_blue_circle:',
+              MEDIUM: ':yellow_circle:',
+              HIGH: ':orange_circle:',
+              CRITICAL: ':red_circle:'
+            };
+
+            const body = [
+              '## :shield: ClawGuard Security Scan',
+              '',
+              `| Metric | Value |`,
+              `|--------|-------|`,
+              `| Risk Level | ${emoji[riskLevel] || ':grey_question:'} **${riskLevel}** |`,
+              `| Risk Score | ${riskScore}/100 |`,
+              `| Findings | ${findings} |`,
+              '',
+              riskLevel === 'SAFE'
+                ? ':white_check_mark: No security issues detected.'
+                : `:warning: Review the [workflow run](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}) for details.`,
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });</code></pre>
+
+        <hr>
+
+        <!-- Threshold Configuration -->
+        <h2 id="threshold-config">Threshold Configuration</h2>
+
+        <p>The <code>severity-threshold</code> input controls when the action fails:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Threshold</th>
+              <th>Fails When Risk Is</th>
+              <th>Use Case</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>critical</code></td>
+              <td>CRITICAL only</td>
+              <td>Loose: only block definitive malware</td>
+            </tr>
+            <tr>
+              <td><code>high</code> (default)</td>
+              <td>HIGH or CRITICAL</td>
+              <td>Recommended for most projects</td>
+            </tr>
+            <tr>
+              <td><code>medium</code></td>
+              <td>MEDIUM, HIGH, or CRITICAL</td>
+              <td>Strict: flag anything notable</td>
+            </tr>
+            <tr>
+              <td><code>low</code></td>
+              <td>LOW, MEDIUM, HIGH, or CRITICAL</td>
+              <td>Very strict: flag any findings</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>The threshold comparison works by mapping risk levels to numeric values: SAFE=0, LOW=1, MEDIUM=2, HIGH=3, CRITICAL=4. The action fails when the detected risk level is greater than or equal to the threshold.</p>
+
+        <hr>
+
+        <!-- Full Example -->
+        <h2 id="full-example">Full Example</h2>
+
+        <p>A complete workflow with semantic analysis, PR comments, and conditional deployment blocking:</p>
+
+        <pre><code><span class="label">yaml</span><span class="keyword">name:</span> Security Pipeline
+<span class="keyword">on:</span>
+  <span class="keyword">push:</span>
+    <span class="keyword">branches:</span> [main]
+  <span class="keyword">pull_request:</span>
+    <span class="keyword">branches:</span> [main]
+
+<span class="keyword">permissions:</span>
+  <span class="keyword">pull-requests:</span> write
+  <span class="keyword">contents:</span> read
+
+<span class="keyword">jobs:</span>
+  <span class="keyword">clawguard:</span>
+    <span class="keyword">name:</span> ClawGuard Security Scan
+    <span class="keyword">runs-on:</span> ubuntu-latest
+
+    <span class="keyword">steps:</span>
+      <span class="keyword">- name:</span> Checkout code
+        <span class="keyword">uses:</span> actions/checkout@v4
+
+      <span class="keyword">- name:</span> Run ClawGuard
+        <span class="keyword">id:</span> scan
+        <span class="keyword">uses:</span> mikecavallo/clawguard@v1
+        <span class="keyword">with:</span>
+          <span class="keyword">path:</span> <span class="string">'./skills'</span>
+          <span class="keyword">severity-threshold:</span> <span class="string">'high'</span>
+          <span class="keyword">output-format:</span> <span class="string">'json'</span>
+          <span class="keyword">semantic:</span> <span class="string">'true'</span>
+          <span class="keyword">api-key:</span> ${{ secrets.CLAWGUARD_API_KEY }}
+          <span class="keyword">node-version:</span> <span class="string">'20'</span>
+
+      <span class="keyword">- name:</span> Upload report artifact
+        <span class="keyword">if:</span> always()
+        <span class="keyword">uses:</span> actions/upload-artifact@v4
+        <span class="keyword">with:</span>
+          <span class="keyword">name:</span> clawguard-report
+          <span class="keyword">path:</span> <span class="string">'clawguard-report.json'</span>
+          <span class="keyword">retention-days:</span> 30
+
+      <span class="keyword">- name:</span> Summary
+        <span class="keyword">if:</span> always()
+        <span class="keyword">run:</span> |
+          echo "### ClawGuard Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Risk Level:** ${{ steps.scan.outputs.risk-level }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Risk Score:** ${{ steps.scan.outputs.risk-score }}/100" >> $GITHUB_STEP_SUMMARY
+          echo "- **Findings:** ${{ steps.scan.outputs.findings-count }}" >> $GITHUB_STEP_SUMMARY</code></pre>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">ClawGuard &mdash; AI Agent Security</div>
+      <div class="footer-links">
+        <a href="https://github.com/mikecavallo/clawguard">GitHub</a>
+        <a href="https://www.npmjs.com/package/@dribgib/clawguard">npm</a>
+        <a href="index.html">Home</a>
+      </div>
+      <p class="footer-copy">&copy; 2025 Mike Cavallo. MIT License.</p>
+    </div>
+  </footer>
+</body>
+</html>

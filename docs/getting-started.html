@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Getting Started — ClawGuard Docs</title>
+  <meta name="description" content="Quick start guide for ClawGuard, the AI agent security scanner. Install, scan, and understand results in under 5 minutes.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="grid-bg"></div>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="container">
+      <div class="nav-inner">
+        <a href="index.html" class="logo">ClawGuard</a>
+        <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="getting-started.html" class="active">Getting Started</a></li>
+          <li><a href="analyzers.html">Analyzers</a></li>
+          <li><a href="cli-reference.html">CLI Reference</a></li>
+          <li><a href="github-action.html">GitHub Action</a></li>
+          <li><a href="patterns.html">Patterns</a></li>
+          <li><a href="https://github.com/mikecavallo/clawguard">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-wrapper">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-title">On this page</div>
+        <ul class="sidebar-links">
+          <li><a href="#installation">Installation</a></li>
+          <li><a href="#first-scan">Your First Scan</a></li>
+          <li><a href="#understanding-results">Understanding Results</a></li>
+          <li><a href="#risk-levels">Risk Levels</a></li>
+          <li><a href="#configuration">Configuration</a></li>
+          <li><a href="#provider-selection">Provider Selection</a></li>
+          <li><a href="#environment-variables">Environment Variables</a></li>
+          <li><a href="#next-steps">Next Steps</a></li>
+        </ul>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="content">
+        <h1>Getting Started</h1>
+        <p class="page-subtitle">Install ClawGuard and run your first security scan in under 5 minutes.</p>
+
+        <!-- Installation -->
+        <h2 id="installation">Installation</h2>
+
+        <p>ClawGuard is distributed as an npm package. Install it globally to use the <code>clawguard</code> command anywhere:</p>
+
+        <pre><code><span class="prompt">$</span> npm install -g @dribgib/clawguard</code></pre>
+
+        <p>Verify the installation:</p>
+
+        <pre><code><span class="prompt">$</span> clawguard version
+<span class="output">ClawGuard v1.0.1</span></code></pre>
+
+        <div class="callout callout-info">
+          <div class="callout-title">Requirements</div>
+          <p>ClawGuard requires <strong>Node.js 18 or later</strong>. Docker is optional but needed for sandbox analysis.</p>
+        </div>
+
+        <!-- First Scan -->
+        <h2 id="first-scan">Your First Scan</h2>
+
+        <p>Point ClawGuard at any skill directory. A skill is typically a folder containing a <code>SKILL.md</code> file and optional scripts, configuration, or dependency files.</p>
+
+        <pre><code><span class="prompt">$</span> clawguard scan ./my-skill</code></pre>
+
+        <p>ClawGuard will automatically run static analysis, dependency scanning, and prompt injection detection. The output looks like this:</p>
+
+        <pre><code><span class="output">🛡️  ClawGuard Security Scanner v1.0.1
+📂 Analyzing: ./my-skill
+
+⚡ Static Analysis .......... 12ms
+📦 Dependency Scan .......... 340ms
+💉 Prompt Injection ......... 8ms
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Risk Level:  </span><span class="string">LOW</span><span class="output">  (Score: 14/100)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Findings: 2 total
+  </span><span class="warning">medium</span><span class="output">  T-CODE-004  Reading credential-like environment variables
+          Location: index.js:23
+  </span><span class="keyword">low</span><span class="output">     T-DEPS-006  Deprecated package: request
+          Location: package.json</span></code></pre>
+
+        <p>For a deeper scan that includes LLM-powered semantic analysis:</p>
+
+        <pre><code><span class="prompt">$</span> clawguard scan ./my-skill <span class="comment"># includes semantic if configured</span>
+<span class="prompt">$</span> clawguard scan ./my-skill --fast <span class="comment"># skip semantic, static only</span>
+<span class="prompt">$</span> clawguard scan ./my-skill --sandbox <span class="comment"># include Docker sandbox</span></code></pre>
+
+        <!-- Understanding Results -->
+        <h2 id="understanding-results">Understanding Results</h2>
+
+        <p>Every scan produces a set of <strong>findings</strong>. Each finding has:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>ID</strong></td>
+              <td>Pattern identifier (e.g., <code>T-CODE-001</code>, <code>T-DEPS-002</code>)</td>
+            </tr>
+            <tr>
+              <td><strong>Category</strong></td>
+              <td>Finding type: <code>code</code>, <code>supply</code>, <code>prompt</code>, <code>semantic</code>, <code>chain</code>, <code>honeypot</code></td>
+            </tr>
+            <tr>
+              <td><strong>Severity</strong></td>
+              <td>One of: <code>critical</code>, <code>high</code>, <code>medium</code>, <code>low</code>, <code>info</code></td>
+            </tr>
+            <tr>
+              <td><strong>Title</strong></td>
+              <td>Brief description of the issue</td>
+            </tr>
+            <tr>
+              <td><strong>Location</strong></td>
+              <td>File and line number where the issue was found</td>
+            </tr>
+            <tr>
+              <td><strong>Evidence</strong></td>
+              <td>The code snippet or text that triggered the finding</td>
+            </tr>
+            <tr>
+              <td><strong>Remediation</strong></td>
+              <td>Suggested fix or action to take</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>Findings are aggregated into a <strong>risk score</strong> (0&ndash;100) using severity-based weights, which maps to a <strong>risk level</strong>.</p>
+
+        <!-- Risk Levels -->
+        <h2 id="risk-levels">Risk Levels</h2>
+
+        <p>Each finding's severity is weighted to compute the total risk score:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Severity</th>
+              <th>Weight</th>
+              <th>Example</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>25 points</td>
+              <td>Curl piped to bash, honeypot credential theft</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-high">High</span></td>
+              <td>10 points</td>
+              <td>eval() usage, obfuscated variables, typosquat packages</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-medium">Medium</span></td>
+              <td>4 points</td>
+              <td>Dynamic imports, credential env reads, child_process usage</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-low">Low</span></td>
+              <td>1 point</td>
+              <td>Deprecated packages, continuation patterns</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-info">Info</span></td>
+              <td>0 points</td>
+              <td>Large files skipped, no scannable files found</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>The total score (capped at 100) maps to a risk level:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Risk Level</th>
+              <th>Score Range</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-safe">SAFE</span></td>
+              <td>0 &ndash; 10</td>
+              <td>No significant issues found. Safe to install.</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-low">LOW</span></td>
+              <td>11 &ndash; 25</td>
+              <td>Minor findings. Review but likely safe.</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-medium">MEDIUM</span></td>
+              <td>26 &ndash; 50</td>
+              <td>Notable findings. Review carefully before installing.</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-high">HIGH</span></td>
+              <td>51 &ndash; 75</td>
+              <td>Serious issues detected. Do not install without review.</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-critical">CRITICAL</span></td>
+              <td>76 &ndash; 100</td>
+              <td>Likely malicious. Do not install.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Configuration -->
+        <h2 id="configuration">Configuration</h2>
+
+        <p>Static analysis works immediately with no configuration. To enable <strong>LLM-powered semantic analysis</strong>, you need to configure an AI provider:</p>
+
+        <pre><code><span class="prompt">$</span> clawguard config</code></pre>
+
+        <p>The interactive wizard will ask you to:</p>
+
+        <ol>
+          <li>Choose a provider: <strong>Anthropic</strong> (Claude), <strong>OpenAI</strong> (GPT-4), or <strong>Ollama</strong> (local)</li>
+          <li>Enter your API key (stored securely with <code>0600</code> permissions)</li>
+          <li>Select a model (or accept the default)</li>
+        </ol>
+
+        <p>Configuration is saved to <code>~/.config/clawguard/config.json</code>.</p>
+
+        <pre><code><span class="prompt">$</span> clawguard config --show  <span class="comment"># view current config</span>
+<span class="prompt">$</span> clawguard config --test  <span class="comment"># verify API connection</span>
+<span class="prompt">$</span> clawguard config --clear <span class="comment"># reset configuration</span></code></pre>
+
+        <!-- Provider Selection -->
+        <h2 id="provider-selection">Provider Selection</h2>
+
+        <div class="card-grid">
+          <div class="card">
+            <h3>Anthropic (Claude)</h3>
+            <p>Default models: Claude Sonnet 4, Claude Opus 4</p>
+            <p>Best for deep understanding and nuanced threat detection. Recommended for most users.</p>
+          </div>
+          <div class="card">
+            <h3>OpenAI (GPT-4)</h3>
+            <p>Default models: GPT-4o, GPT-4o Mini</p>
+            <p>Fast analysis with good accuracy. Works well for high-throughput scanning.</p>
+          </div>
+          <div class="card">
+            <h3>Ollama (Local)</h3>
+            <p>Default models: Llama 3 70B, Mixtral, DeepSeek</p>
+            <p>Complete privacy with no API costs. Requires Ollama running locally.</p>
+          </div>
+        </div>
+
+        <!-- Environment Variables -->
+        <h2 id="environment-variables">Environment Variables</h2>
+
+        <p>Instead of storing API keys in the config file, you can use environment variables. This is recommended for CI/CD and shared environments:</p>
+
+        <pre><code><span class="comment"># For Anthropic</span>
+<span class="prompt">$</span> export CLAWGUARD_API_KEY=sk-ant-...
+
+<span class="comment"># Or use provider-specific variables</span>
+<span class="prompt">$</span> export ANTHROPIC_API_KEY=sk-ant-...
+<span class="prompt">$</span> export OPENAI_API_KEY=sk-...</code></pre>
+
+        <p>Priority order: <code>CLAWGUARD_API_KEY</code> > config file API key > <code>ANTHROPIC_API_KEY</code> / <code>OPENAI_API_KEY</code>.</p>
+
+        <div class="callout callout-warning">
+          <div class="callout-title">Security Tip</div>
+          <p>Avoid passing API keys via the <code>--api-key</code> command-line flag in production. Command-line arguments are visible in process listings (<code>ps</code>) and shell history. Use environment variables or the config file instead.</p>
+        </div>
+
+        <!-- Next Steps -->
+        <h2 id="next-steps">Next Steps</h2>
+
+        <ul>
+          <li><a href="analyzers.html">Learn about all 6 analyzers</a> &mdash; understand how each detection layer works</li>
+          <li><a href="cli-reference.html">CLI Reference</a> &mdash; complete list of commands and options</li>
+          <li><a href="github-action.html">Set up the GitHub Action</a> &mdash; automate scans in your CI/CD pipeline</li>
+          <li><a href="patterns.html">Pattern documentation</a> &mdash; how YAML detection patterns work</li>
+        </ul>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">ClawGuard &mdash; AI Agent Security</div>
+      <div class="footer-links">
+        <a href="https://github.com/mikecavallo/clawguard">GitHub</a>
+        <a href="https://www.npmjs.com/package/@dribgib/clawguard">npm</a>
+        <a href="index.html">Home</a>
+      </div>
+      <p class="footer-copy">&copy; 2025 Mike Cavallo. MIT License.</p>
+    </div>
+  </footer>
+</body>
+</html>

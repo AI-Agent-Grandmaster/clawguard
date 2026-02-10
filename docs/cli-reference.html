@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLI Reference — ClawGuard Docs</title>
+  <meta name="description" content="Complete command-line reference for ClawGuard. All commands, options, examples, and exit codes.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="grid-bg"></div>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="container">
+      <div class="nav-inner">
+        <a href="index.html" class="logo">ClawGuard</a>
+        <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="getting-started.html">Getting Started</a></li>
+          <li><a href="analyzers.html">Analyzers</a></li>
+          <li><a href="cli-reference.html" class="active">CLI Reference</a></li>
+          <li><a href="github-action.html">GitHub Action</a></li>
+          <li><a href="patterns.html">Patterns</a></li>
+          <li><a href="https://github.com/mikecavallo/clawguard">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-wrapper">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-title">Commands</div>
+        <ul class="sidebar-links">
+          <li><a href="#scan">scan</a></li>
+          <li><a href="#full">full</a></li>
+          <li><a href="#gate">gate</a></li>
+          <li><a href="#library">library</a></li>
+          <li><a href="#graph">graph</a></li>
+          <li><a href="#honeypot">honeypot</a></li>
+          <li><a href="#config">config</a></li>
+          <li><a href="#init">init</a></li>
+          <li><a href="#sign">sign</a></li>
+          <li><a href="#diff">diff</a></li>
+          <li><a href="#reputation">reputation</a></li>
+          <li><a href="#monitor">monitor</a></li>
+          <li><a href="#dashboard">dashboard</a></li>
+          <li><a href="#update-patterns">update-patterns</a></li>
+          <li><a href="#ui">ui</a></li>
+          <li><a href="#version">version</a></li>
+          <li><a href="#help">help</a></li>
+          <li><a href="#about">about</a></li>
+          <li><a href="#exit-codes">Exit Codes</a></li>
+        </ul>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="content">
+        <h1>CLI Reference</h1>
+        <p class="page-subtitle">Complete reference for every ClawGuard command, option, and exit code.</p>
+
+        <pre><code><span class="prompt">$</span> clawguard &lt;command&gt; [options]</code></pre>
+
+        <hr>
+
+        <!-- scan -->
+        <h2 id="scan">scan</h2>
+        <p>Scan a skill directory for security issues. Runs static analysis, dependency scanning, and prompt injection detection by default. Includes semantic analysis when an AI provider is configured.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard scan &lt;path&gt; [options]</code></pre>
+
+        <h4>Arguments</h4>
+        <table>
+          <thead><tr><th>Argument</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>path</code></td><td>Path to skill directory or URL (GitHub repos supported)</td></tr>
+          </tbody>
+        </table>
+
+        <h4>Options</h4>
+        <table>
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>-f, --fast</code></td><td>Static analysis only (skip semantic analysis)</td></tr>
+            <tr><td><code>-s, --sandbox</code></td><td>Include behavioral sandbox analysis (requires Docker)</td></tr>
+            <tr><td><code>-d, --deep</code></td><td>Deep dependency source analysis</td></tr>
+            <tr><td><code>-o, --output &lt;format&gt;</code></td><td>Output format: <code>md</code> (default), <code>json</code>, <code>html</code></td></tr>
+            <tr><td><code>-v, --verbose</code></td><td>Show detailed progress</td></tr>
+            <tr><td><code>--api-key &lt;key&gt;</code></td><td>API key for semantic analysis (prefer env vars)</td></tr>
+          </tbody>
+        </table>
+
+        <h4>Examples</h4>
+        <pre><code><span class="prompt">$</span> clawguard scan ./my-skill
+<span class="prompt">$</span> clawguard scan ./my-skill --fast
+<span class="prompt">$</span> clawguard scan ./my-skill --sandbox -o json
+<span class="prompt">$</span> clawguard scan https://github.com/user/skill-repo</code></pre>
+
+        <hr>
+
+        <!-- full -->
+        <h2 id="full">full</h2>
+        <p>Run all analysis layers including semantic analysis and sandbox. Equivalent to <code>scan --sandbox</code> with semantic always enabled.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard full &lt;path&gt; [options]</code></pre>
+
+        <h4>Options</h4>
+        <p>Same as <code>scan</code>. Semantic and sandbox are enabled by default.</p>
+
+        <h4>Examples</h4>
+        <pre><code><span class="prompt">$</span> clawguard full ./suspicious-skill
+<span class="prompt">$</span> clawguard full ./skill -o json</code></pre>
+
+        <hr>
+
+        <!-- gate -->
+        <h2 id="gate">gate</h2>
+        <p>Pre-install security gate for CI/CD pipelines. Returns exit code 0 if safe, exit code 2 if blocked. Designed to be placed before <code>npm install</code> or skill installation.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard gate &lt;path|url&gt; [options]</code></pre>
+
+        <h4>Options</h4>
+        <table>
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>-s, --sandbox</code></td><td>Include behavioral sandbox analysis</td></tr>
+            <tr><td><code>--allow-high</code></td><td>Only block on critical findings (allow high through)</td></tr>
+            <tr><td><code>--json</code></td><td>Output JSON result for programmatic use</td></tr>
+          </tbody>
+        </table>
+
+        <h4>Exit Codes</h4>
+        <table>
+          <thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>0</code></td><td>ALLOWED &mdash; safe to install</td></tr>
+            <tr><td><code>2</code></td><td>BLOCKED &mdash; critical (or high, unless <code>--allow-high</code>) issues found</td></tr>
+          </tbody>
+        </table>
+
+        <h4>Examples</h4>
+        <pre><code><span class="comment"># Block on critical or high</span>
+<span class="prompt">$</span> clawguard gate ./skill && npm install
+
+<span class="comment"># Block only on critical</span>
+<span class="prompt">$</span> clawguard gate ./skill --allow-high
+
+<span class="comment"># JSON output for CI</span>
+<span class="prompt">$</span> clawguard gate ./skill --json | jq '.allowed'
+
+<span class="comment"># Gate a remote skill</span>
+<span class="prompt">$</span> clawguard gate https://github.com/user/skill</code></pre>
+
+        <hr>
+
+        <!-- library -->
+        <h2 id="library">library</h2>
+        <p>Scan an entire directory of skills for attack chains. Analyzes how skills interact and identifies dangerous capability combinations.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard library &lt;path&gt; [options]</code></pre>
+
+        <h4>Options</h4>
+        <table>
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>-f, --fast</code></td><td>Pattern analysis only (skip semantic chain analysis)</td></tr>
+            <tr><td><code>-o, --output &lt;format&gt;</code></td><td>Output format: <code>md</code>, <code>json</code></td></tr>
+            <tr><td><code>-v, --verbose</code></td><td>Show detailed progress</td></tr>
+          </tbody>
+        </table>
+
+        <h4>Examples</h4>
+        <pre><code><span class="prompt">$</span> clawguard library ~/.skills/
+<span class="prompt">$</span> clawguard library ./my-skills --fast -o json</code></pre>
+
+        <hr>
+
+        <!-- graph -->
+        <h2 id="graph">graph</h2>
+        <p>Generate a data flow and capability graph for a skill library. Visualizes how data and capabilities flow between skills.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard graph &lt;path&gt; [options]</code></pre>
+
+        <h4>Options</h4>
+        <table>
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>-o, --output &lt;format&gt;</code></td><td>Output format: <code>md</code>, <code>json</code></td></tr>
+          </tbody>
+        </table>
+
+        <h4>Examples</h4>
+        <pre><code><span class="prompt">$</span> clawguard graph ~/.skills/</code></pre>
+
+        <hr>
+
+        <!-- honeypot -->
+        <h2 id="honeypot">honeypot</h2>
+        <p>Run only the honeypot/sandbox analysis on a skill. Useful when you want to test a skill's runtime behavior without running the full scan pipeline.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard honeypot &lt;path&gt;</code></pre>
+
+        <h4>Examples</h4>
+        <pre><code><span class="prompt">$</span> clawguard honeypot ./suspicious-skill</code></pre>
+
+        <hr>
+
+        <!-- config -->
+        <h2 id="config">config</h2>
+        <p>Configure the AI provider and API key for semantic analysis. Runs an interactive setup wizard.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard config [options]</code></pre>
+
+        <h4>Options</h4>
+        <table>
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>--show</code></td><td>Display current configuration</td></tr>
+            <tr><td><code>--test</code></td><td>Test API connection</td></tr>
+            <tr><td><code>--clear</code></td><td>Reset configuration</td></tr>
+          </tbody>
+        </table>
+
+        <h4>Examples</h4>
+        <pre><code><span class="prompt">$</span> clawguard config          <span class="comment"># Run setup wizard</span>
+<span class="prompt">$</span> clawguard config --show   <span class="comment"># View current config</span>
+<span class="prompt">$</span> clawguard config --test   <span class="comment"># Verify API works</span>
+<span class="prompt">$</span> clawguard config --clear  <span class="comment"># Reset to default</span></code></pre>
+
+        <hr>
+
+        <!-- init -->
+        <h2 id="init">init</h2>
+        <p>Initialize a new skill with security best practices. Creates a template <code>SKILL.md</code> and recommended project structure.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard init [path]</code></pre>
+
+        <h4>Examples</h4>
+        <pre><code><span class="prompt">$</span> clawguard init ./my-new-skill</code></pre>
+
+        <hr>
+
+        <!-- sign -->
+        <h2 id="sign">sign</h2>
+        <p>Cryptographically sign a skill to verify its integrity. Creates a signature that can be verified before installation.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard sign &lt;path&gt; [options]</code></pre>
+
+        <h4>Examples</h4>
+        <pre><code><span class="prompt">$</span> clawguard sign ./my-skill</code></pre>
+
+        <hr>
+
+        <!-- diff -->
+        <h2 id="diff">diff</h2>
+        <p>Compare two versions of a skill and highlight security-relevant changes. Useful for reviewing skill updates before installing new versions.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard diff &lt;path-a&gt; &lt;path-b&gt;</code></pre>
+
+        <h4>Examples</h4>
+        <pre><code><span class="prompt">$</span> clawguard diff ./skill-v1 ./skill-v2</code></pre>
+
+        <hr>
+
+        <!-- reputation -->
+        <h2 id="reputation">reputation</h2>
+        <p>Check the reputation of a skill or author against the community database. Shows known reports and trust scores.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard reputation &lt;path|author&gt;</code></pre>
+
+        <h4>Examples</h4>
+        <pre><code><span class="prompt">$</span> clawguard reputation ./some-skill
+<span class="prompt">$</span> clawguard reputation user123</code></pre>
+
+        <hr>
+
+        <!-- monitor -->
+        <h2 id="monitor">monitor</h2>
+        <p>Start a continuous monitoring daemon that watches a skill directory for changes and re-scans automatically.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard monitor &lt;path&gt; [options]</code></pre>
+
+        <h4>Examples</h4>
+        <pre><code><span class="prompt">$</span> clawguard monitor ~/.skills/</code></pre>
+
+        <hr>
+
+        <!-- dashboard -->
+        <h2 id="dashboard">dashboard</h2>
+        <p>Start a local web dashboard that displays scan results, trends, and security status for your skill library.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard dashboard [options]</code></pre>
+
+        <h4>Examples</h4>
+        <pre><code><span class="prompt">$</span> clawguard dashboard</code></pre>
+
+        <hr>
+
+        <!-- update-patterns -->
+        <h2 id="update-patterns">update-patterns</h2>
+        <p>Fetch the latest detection patterns from the ClawGuard GitHub repository. Updates <code>code.yaml</code>, <code>deps.yaml</code>, and <code>prompt.yaml</code> with the latest community patterns.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard update-patterns</code></pre>
+
+        <h4>Examples</h4>
+        <pre><code><span class="prompt">$</span> clawguard update-patterns
+<span class="output">Fetching latest patterns from GitHub...
+  code.yaml:   42 patterns (was 36, +6 new)
+  deps.yaml:   118 packages (was 100, +18 new)
+  prompt.yaml: 35 patterns (was 30, +5 new)
+Patterns updated successfully.</span></code></pre>
+
+        <hr>
+
+        <!-- ui -->
+        <h2 id="ui">ui</h2>
+        <p>Launch the interactive terminal UI. Provides a full-screen, menu-driven interface for scanning skills, checking the known-bad database, and configuring providers.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard ui</code></pre>
+
+        <h4>Menu Options</h4>
+        <table>
+          <thead><tr><th>Key</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><code>[1]</code></td><td>Scan local skill(s)</td></tr>
+            <tr><td><code>[2]</code></td><td>Scan skill from URL</td></tr>
+            <tr><td><code>[3]</code></td><td>Check known-bad database</td></tr>
+            <tr><td><code>[4]</code></td><td>Configure AI provider</td></tr>
+            <tr><td><code>[5]</code></td><td>View scan history</td></tr>
+            <tr><td><code>[q]</code></td><td>Quit</td></tr>
+          </tbody>
+        </table>
+
+        <hr>
+
+        <!-- version -->
+        <h2 id="version">version</h2>
+        <p>Display the installed ClawGuard version.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard version</code></pre>
+
+        <hr>
+
+        <!-- help -->
+        <h2 id="help">help</h2>
+        <p>Display help information for a specific command or topic.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard help [topic]</code></pre>
+
+        <h4>Topics</h4>
+        <table>
+          <thead><tr><th>Topic</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>scan</code></td><td>Scanning skills (local and remote)</td></tr>
+            <tr><td><code>library</code></td><td>Multi-skill attack chain detection</td></tr>
+            <tr><td><code>sandbox</code></td><td>Behavioral sandbox with honeypots</td></tr>
+            <tr><td><code>config</code></td><td>API key and provider setup</td></tr>
+            <tr><td><code>gate</code></td><td>Pre-install security gate</td></tr>
+            <tr><td><code>ui</code></td><td>Interactive terminal interface</td></tr>
+          </tbody>
+        </table>
+
+        <hr>
+
+        <!-- about -->
+        <h2 id="about">about</h2>
+        <p>Display the full ClawGuard overview including why it exists, how it protects you, and all available features.</p>
+
+        <h4>Usage</h4>
+        <pre><code>clawguard about</code></pre>
+
+        <hr>
+
+        <!-- Exit Codes -->
+        <h2 id="exit-codes">Exit Codes</h2>
+
+        <p>ClawGuard uses consistent exit codes across all commands:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Meaning</th>
+              <th>Context</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>0</code></td>
+              <td>Success / Safe</td>
+              <td>No issues found, or risk within threshold</td>
+            </tr>
+            <tr>
+              <td><code>1</code></td>
+              <td>High risk / Error</td>
+              <td>High-risk findings or fatal error</td>
+            </tr>
+            <tr>
+              <td><code>2</code></td>
+              <td>Blocked / Critical</td>
+              <td>Critical findings detected (used by <code>gate</code>)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout-info">
+          <div class="callout-title">CI/CD Tip</div>
+          <p>Use <code>clawguard gate</code> in your pipeline. It returns exit code 0 (safe to proceed) or 2 (block installation), making it straightforward to integrate into any CI/CD system.</p>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">ClawGuard &mdash; AI Agent Security</div>
+      <div class="footer-links">
+        <a href="https://github.com/mikecavallo/clawguard">GitHub</a>
+        <a href="https://www.npmjs.com/package/@dribgib/clawguard">npm</a>
+        <a href="index.html">Home</a>
+      </div>
+      <p class="footer-copy">&copy; 2025 Mike Cavallo. MIT License.</p>
+    </div>
+  </footer>
+</body>
+</html>
